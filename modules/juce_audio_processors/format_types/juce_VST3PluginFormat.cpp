@@ -2296,7 +2296,7 @@ public:
 
         if (head != nullptr)
         {
-            ComSmartPtr<Steinberg::MemoryStream> componentStream (createMemoryStreamForState (*head, "IComponent"));
+            ComSmartPtr<Steinberg::MemoryStream> componentStream (createMemoryStreamForState (*head, "IComponent"), false);
 
             if (componentStream != nullptr && holder->component != nullptr)
                 holder->component->setState (componentStream);

@@ -709,8 +709,14 @@ private:
         if (currentRate == 0)
             currentRate = 48000.0;
 
+        // SD had to fix something here
+        int lastbs = -1;
         for (auto bs : currentDevice->getAvailableBufferSizes())
-            bufferSizeDropDown->addItem (String (bs) + " samples (" + String (bs * 1000.0 / currentRate, 1) + " ms)", bs);
+        {
+            if (bs == lastbs) continue;
+            lastbs = bs;
+            bufferSizeDropDown->addItem(String(bs) + " samples (" + String(bs * 1000.0 / currentRate, 1) + " ms)", bs);
+        }
 
         bufferSizeDropDown->setSelectedId (currentDevice->getCurrentBufferSizeSamples(), dontSendNotification);
         bufferSizeDropDown->onChange = [this] { updateConfig (false, false, false, true); };
