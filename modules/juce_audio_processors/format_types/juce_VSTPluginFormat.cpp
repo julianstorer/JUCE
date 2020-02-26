@@ -1577,7 +1577,7 @@ struct VSTPluginInstance     : public AudioPluginInstance,
             dispatch (Vst2::effSetProgram, 0, jlimit (0, getNumPrograms() - 1, newIndex), nullptr, 0);
     }
 
-    const String getProgramName (int index) override
+    String getProgramName (int index) override
     {
         if (index >= 0)
         {

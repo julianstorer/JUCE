@@ -1275,7 +1275,7 @@ public:
         sendAllParametersChangedEvents();
     }
 
-    const String getProgramName (int index) override
+    String getProgramName (int index) override
     {
         String s;
         CFArrayRef presets;

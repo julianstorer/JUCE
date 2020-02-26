@@ -365,7 +365,7 @@ public:
                 ladspaParam->reset();
     }
 
-    const String getProgramName (int) override             { return {}; }
+    String getProgramName (int) override             { return {}; }
     void changeProgramName (int, const String&) override   {}
 
     //==============================================================================

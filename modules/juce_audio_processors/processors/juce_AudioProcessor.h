@@ -1052,7 +1052,7 @@ public:
     virtual void setCurrentProgram (int index) = 0;
 
     /** Must return the name of a given program. */
-    virtual const String getProgramName (int index) = 0;
+    virtual String getProgramName (int index) = 0;
 
     /** Called by the host to rename a program. */
     virtual void changeProgramName (int index, const String& newName) = 0;

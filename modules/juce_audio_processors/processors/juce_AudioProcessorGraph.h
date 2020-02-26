@@ -362,7 +362,7 @@ public:
         int getNumPrograms() override;
         int getCurrentProgram() override;
         void setCurrentProgram (int) override;
-        const String getProgramName (int) override;
+        String getProgramName (int) override;
         void changeProgramName (int, const String&) override;
 
         void getStateInformation (juce::MemoryBlock& destData) override;
@@ -398,7 +398,7 @@ public:
     int getNumPrograms() override                           { return 0; }
     int getCurrentProgram() override                        { return 0; }
     void setCurrentProgram (int) override                   { }
-    const String getProgramName (int) override              { return {}; }
+    String getProgramName (int) override              { return {}; }
     void changeProgramName (int, const String&) override    { }
     void getStateInformation (juce::MemoryBlock&) override;
     void setStateInformation (const void* data, int sizeInBytes) override;

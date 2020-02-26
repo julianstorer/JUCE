@@ -883,7 +883,7 @@ private:
         int getNumPrograms() override { return 1; }
         int getCurrentProgram() override { return {}; }
         void setCurrentProgram (int) override {}
-        const String getProgramName (int) override { return {}; }
+        String getProgramName (int) override { return {}; }
         void changeProgramName (int, const String&) override {}
         void getStateInformation (MemoryBlock&) override {}
         void setStateInformation (const void*, int) override {}
