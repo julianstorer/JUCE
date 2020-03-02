@@ -2763,6 +2763,8 @@ struct VSTPluginWindow   : public AudioProcessorEditor,
                           #if ! JUCE_MAC
                            private ComponentMovementWatcher,
                            private ComponentPeer::ScaleFactorListener,
+                          #elif JUCE_MAC
+                           private AsyncUpdater,
                           #endif
                            private Timer
 {
@@ -2793,6 +2795,7 @@ public:
         {
             cocoaWrapper.reset (new AutoResizingNSViewComponentWithParent());
             addAndMakeVisible (cocoaWrapper.get());
+            triggerAsyncUpdate();
         }
        #endif
 
@@ -2839,13 +2842,21 @@ public:
     {
         g.fillAll (Colours::black);
     }
+    
+    void handleAsyncUpdate() override
+    {
+        // At that point we should have a valid parent view pointer!
+        jassert(cocoaWrapper->getParentView() != nullptr);
+        
+        visibilityChanged();
+    }
 
     void visibilityChanged() override
     {
-        if (cocoaWrapper != nullptr)
+        if (cocoaWrapper->getParentView() != nullptr)
         {
             if (isVisible())
-                openPluginWindow ((NSView*)cocoaWrapper->getView());
+                openPluginWindow ((NSView*)cocoaWrapper->getParentView());
             else
                 closePluginWindow();
         }

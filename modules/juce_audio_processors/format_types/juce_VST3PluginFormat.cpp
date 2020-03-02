@@ -1379,7 +1379,7 @@ private:
            #elif JUCE_MAC
             embeddedComponent.setBounds (getLocalBounds());
             addAndMakeVisible (embeddedComponent);
-            pluginHandle = (NSView*) embeddedComponent.getView();
+            pluginHandle = (NSView*) embeddedComponent.getParentView();
             jassert (pluginHandle != nil);
            #endif
 

@@ -88,7 +88,7 @@ static inline bool arrayContainsPlugin (const OwnedArray<PluginDescription>& lis
 
 //==============================================================================
 struct AutoResizingNSViewComponent  : public ViewComponentBaseClass,
-                                      private AsyncUpdater
+                                      public AsyncUpdater
 {
     void childBoundsChanged (Component*) override  { triggerAsyncUpdate(); }
     void handleAsyncUpdate() override              { resizeToFitView(); }
@@ -100,30 +100,86 @@ struct AutoResizingNSViewComponentWithParent  : public AutoResizingNSViewCompone
 {
     AutoResizingNSViewComponentWithParent()
     {
-        JUCE_IOS_MAC_VIEW* v = [[JUCE_IOS_MAC_VIEW alloc] init];
-        setView (v);
-        [v release];
-
         startTimer (30);
     }
-
-    JUCE_IOS_MAC_VIEW* getChildView() const
+    
+    void parentHierarchyChanged() override
     {
-        if (JUCE_IOS_MAC_VIEW* parent = (JUCE_IOS_MAC_VIEW*) getView())
-            if ([[parent subviews] count] > 0)
-                return [[parent subviews] objectAtIndex: 0];
-
-        return nil;
+        if (parent == nil)
+        {
+            // Check a if there now is a valid parent NSView pointer
+            if (auto* parentComp = getParentComponent())
+            {
+                if (auto* peer = parentComp->getPeer())
+                {
+                    auto* view = (NSView*) peer->getNativeHandle();
+                    jassert(view != nil);
+                    
+                    parent = view;
+                }
+            }
+        }
     }
-
+    
     void timerCallback() override
     {
+        // Grab the first NSView from the parent and attach it to this component
         if (JUCE_IOS_MAC_VIEW* child = getChildView())
         {
             stopTimer();
             setView (child);
+            
+            //---->
+            // Workarounds for correct resizing of hosted plughin UIs
+            syncSubviewSizes();
+         
+            NSRect childFrame = [child frame];
+            getParentComponent()->setSize((int)childFrame.size.width, (int)childFrame.size.height+1);
+            getParentComponent()->setSize((int)childFrame.size.width, (int)childFrame.size.height);
+            //<----
         }
     }
+    
+    JUCE_IOS_MAC_VIEW* getParentView() const
+    {
+        return parent;
+    }
+    
+private:
+    
+    JUCE_IOS_MAC_VIEW* getChildView() const
+    {
+        if ([[parent subviews] count] > 0)
+        {
+            return [[parent subviews] objectAtIndex: ([[parent subviews] count] - 1)];
+        }
+
+        return nil;
+    }
+    
+    void syncSubviewSizes()
+    {
+        // Some plugins create more than one NSView under the parent (e.g. KORG Gadget) but
+        // AutoResizingNSViewComponent can only track one component. So we have to manually sync
+        // the component sizes.
+        if ([[parent subviews] count] > 1)
+        {
+            if (auto* mainView = (JUCE_IOS_MAC_VIEW*) getView())
+            {
+                NSRect viewFrame = [mainView frame];
+
+                for (JUCE_IOS_MAC_VIEW* subView in [parent subviews])
+                {
+                    if (subView != mainView)
+                    {
+                        [subView setFrame: viewFrame];
+                    }
+                }
+            }
+        }
+    }
+    
+    JUCE_IOS_MAC_VIEW* parent = nullptr;
 };
 #endif
 
