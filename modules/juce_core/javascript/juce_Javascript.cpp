@@ -42,7 +42,7 @@ namespace juce
     X(var,      "var")      X(if_,     "if")     X(else_,  "else")   X(do_,       "do")       X(null_,     "null") \
     X(while_,   "while")    X(for_,    "for")    X(break_, "break")  X(continue_, "continue") X(undefined, "undefined") \
     X(function, "function") X(return_, "return") X(true_,  "true")   X(false_,    "false")    X(new_,      "new") \
-    X(typeof_,  "typeof")
+    X(typeof_,  "typeof")   X(throw_,  "throw")
 
 namespace TokenTypes
 {
@@ -365,6 +365,19 @@ struct JavascriptEngine::RootObject   : public DynamicObject
     {
         ContinueStatement (const CodeLocation& l) noexcept : Statement (l) {}
         ResultCode perform (const Scope&, var*) const override  { return continueWasHit; }
+    };
+
+    struct ThrowStatement  : public Statement
+    {
+        ThrowStatement (const CodeLocation& l, Expression* v) noexcept : Statement (l), thrownValue (v) {}
+        
+        ResultCode perform (const Scope& s, var*) const override
+        {
+            location.throwError(thrownValue->getResult (s));
+            return ok;
+        }
+        
+        ExpPtr thrownValue;
     };
 
     struct LiteralValue  : public Expression
@@ -1134,6 +1147,7 @@ struct JavascriptEngine::RootObject   : public DynamicObject
             if (matchIf (TokenTypes::do_))              return parseDoOrWhileLoop (true);
             if (matchIf (TokenTypes::for_))             return parseForLoop();
             if (matchIf (TokenTypes::return_))          return parseReturn();
+            if (matchIf (TokenTypes::throw_))           return parseThrow();
             if (matchIf (TokenTypes::break_))           return new BreakStatement (location);
             if (matchIf (TokenTypes::continue_))        return new ContinueStatement (location);
             if (matchIf (TokenTypes::function))         return parseFunction();
@@ -1171,6 +1185,16 @@ struct JavascriptEngine::RootObject   : public DynamicObject
                 return new ReturnStatement (location, new Expression (location));
 
             auto* r = new ReturnStatement (location, parseExpression());
+            matchIf (TokenTypes::semicolon);
+            return r;
+        }
+
+        Statement* parseThrow()
+        {
+            if (matchIf (TokenTypes::semicolon))
+                return new ThrowStatement (location, new Expression (location));
+            
+            auto* r = new ThrowStatement (location, parseExpression());
             matchIf (TokenTypes::semicolon);
             return r;
         }
