@@ -84,6 +84,11 @@ void FilenameComponent::setBrowseButtonText (const String& newBrowseButtonText)
     lookAndFeelChanged();
 }
 
+void FilenameComponent::setFileBrowserWildcard (const String& newWildcard) noexcept
+{
+    wildcard = newWildcard;
+}
+
 void FilenameComponent::lookAndFeelChanged()
 {
     browseButton.reset();

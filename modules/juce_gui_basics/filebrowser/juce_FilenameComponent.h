@@ -177,6 +177,13 @@ public:
     */
     void setBrowseButtonText (const String& browseButtonText);
 
+    /** Changes the wildcard pattern to use in the file browser - e.g. "*.txt;*.foo".
+        If an empty string is passed in, then the pattern is assumed to be "*".
+
+        @param wildcard     the new wildcard to use.
+    */
+    void setFileBrowserWildcard (const String& wildcard) noexcept;
+
     //==============================================================================
     /** Adds a listener that will be called when the selected file is changed. */
     void addListener (FilenameComponentListener* listener);
