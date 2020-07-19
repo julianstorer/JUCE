@@ -155,7 +155,7 @@ public:
         {
             auto now = Time::getCurrentTime();
 
-            if (getCurrentlyOver() != nullptr)
+            if (getCurrentlyOver () != nullptr &&  Process::isForegroundProcess ())
                 lastTimeOverTarget = now;
             else if (now > lastTimeOverTarget + RelativeTime::milliseconds (700))
                 checkForExternalDrag (details, screenPos);
