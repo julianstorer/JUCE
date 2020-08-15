@@ -641,8 +641,6 @@ void AudioThumbnail::saveTo (OutputStream& output) const
 //==============================================================================
 bool AudioThumbnail::setDataSource (LevelDataSource* newSource)
 {
-    JUCE_ASSERT_MESSAGE_MANAGER_IS_LOCKED
-
     numSamplesFinished = 0;
     auto wasSuccessful = [&] { return sampleRate > 0 && totalSamples > 0; };
 
