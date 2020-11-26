@@ -378,6 +378,9 @@ inline float juce_hypot (float a, float b) noexcept
 template <typename FloatType>
 struct MathConstants
 {
+    // if you hit this, you're probably accidentally passing an integer to a function like degreesToRadians() which would result in degraded output.
+    static_assert(!std::is_integral<FloatType>::value, "FloatType cannot be an integer");
+
     /** A predefined value for Pi */
     static constexpr FloatType pi = static_cast<FloatType> (3.141592653589793238L);
 
