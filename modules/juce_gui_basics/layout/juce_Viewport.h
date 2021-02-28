@@ -286,6 +286,17 @@ public:
         @see setScrollOnDragEnabled
     */
     bool isCurrentlyScrollingOnDrag() const noexcept;
+    
+    /** When enabled scrollbars will be drawn on top of the viewed component,
+        allowing it to draw behind them.
+        Otherwise, scrollbars will be placed side by side with the viewed component.
+     */
+    void setFloatingScrollbarEnabled (bool floating);
+    
+    /** Returns true if floating scrollbars are enabled
+        @see setFloatingScrollbars
+     */
+    bool isFloatingScrollbarEnabled() const noexcept;
 
     //==============================================================================
     /** @internal */
@@ -324,7 +335,8 @@ private:
     bool customScrollBarThickness = false;
     bool allowScrollingWithoutScrollbarV = false, allowScrollingWithoutScrollbarH = false;
     bool vScrollbarRight = true, hScrollbarBottom = true;
-
+    bool floatingScrollbars = false;
+    
     struct DragToScrollListener;
     std::unique_ptr<DragToScrollListener> dragToScrollListener;
 

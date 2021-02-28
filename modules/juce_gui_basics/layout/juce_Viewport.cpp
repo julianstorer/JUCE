@@ -319,6 +319,20 @@ bool Viewport::isCurrentlyScrollingOnDrag() const noexcept
 {
     return dragToScrollListener != nullptr && dragToScrollListener->isDragging;
 }
+    
+void Viewport::setFloatingScrollbarEnabled(bool floating)
+{
+    if (floatingScrollbars != floating)
+    {
+        floatingScrollbars = floating;
+        updateVisibleArea();
+    }
+}
+    
+bool Viewport::isFloatingScrollbarEnabled() const noexcept
+{
+    return floatingScrollbars;
+}
 
 //==============================================================================
 void Viewport::lookAndFeelChanged()
@@ -381,12 +395,12 @@ void Viewport::updateVisibleArea()
 
         if (contentComp == nullptr)
         {
-            contentHolder.setBounds (contentArea);
+            contentHolder.setBounds (floatingScrollbars ? getLocalBounds() : contentArea);
             break;
         }
 
         auto oldContentBounds = contentComp->getBounds();
-        contentHolder.setBounds (contentArea);
+        contentHolder.setBounds (floatingScrollbars ? getLocalBounds() : contentArea);
 
         // If the content has changed its size, that might affect our scrollbars, so go round again and re-calculate..
         if (oldContentBounds == contentComp->getBounds())
