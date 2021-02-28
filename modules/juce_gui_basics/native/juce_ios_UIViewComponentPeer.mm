@@ -97,6 +97,11 @@ using namespace juce;
 @public
     UIViewComponentPeer* owner;
     UITextView* hiddenTextView;
+#if JUCE_ENABLE_IOS_REPAINT_CACHE
+@private
+    CGContextRef bitmapContext;
+    RectangleList<int> dirtyRects;
+#endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
 }
 
 - (JuceUIView*) initWithOwner: (UIViewComponentPeer*) owner withFrame: (CGRect) frame;
@@ -399,15 +404,73 @@ MultiTouchMapper<UITouch*> UIViewComponentPeer::currentTouches;
 {
     [hiddenTextView removeFromSuperview];
     [hiddenTextView release];
+    
+    #if JUCE_ENABLE_IOS_REPAINT_CACHE
+    if(bitmapContext)
+    {
+        CGContextRelease(bitmapContext);
+    }
+    #endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
 
     [super dealloc];
 }
+
+#if JUCE_ENABLE_IOS_REPAINT_CACHE
+- (void) setNeedsDisplay
+{
+    dirtyRects.clear();
+    dirtyRects.add(convertToRectInt(self.frame));
+    [super setNeedsDisplay];
+}
+
+- (void) setNeedsDisplayInRect: (CGRect) r
+{
+    dirtyRects.add(convertToRectInt(r));
+    [super setNeedsDisplayInRect:r];
+}
+#endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
 
 //==============================================================================
 - (void) drawRect: (CGRect) r
 {
     if (owner != nullptr)
+    {
+        #if JUCE_ENABLE_IOS_REPAINT_CACHE
+            const auto scale = self.contentScaleFactor;
+
+            if(!bitmapContext || CGBitmapContextGetWidth(bitmapContext) != self.frame.size.width || CGBitmapContextGetHeight(bitmapContext) != self.frame.size.height)
+            {
+                if(bitmapContext)
+                {
+                    CGContextRelease(bitmapContext);
+                }
+                bitmapContext = CGBitmapContextCreate(nullptr, self.frame.size.width * scale, self.frame.size.height * scale, 8, 0, CGColorSpaceCreateDeviceRGB(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+                
+                // we re-created the context, so we need to repaint everything
+                dirtyRects.clear();
+                dirtyRects.add(convertToRectInt(self.frame));
+            }
+        
+            CGContextRef cg = UIGraphicsGetCurrentContext();
+            UIGraphicsPushContext(bitmapContext);
+        
+            CoreGraphicsContext g (bitmapContext, self.frame.size.height, scale);
+            CGContextConcatCTM (bitmapContext, CGAffineTransformMakeScale(scale, scale));
+            CGContextConcatCTM (bitmapContext, CGAffineTransformMake (1, 0, 0, -1, 0, self.frame.size.height));
+            g.clipToRectangleList(dirtyRects);
+            dirtyRects.clear();
+            CGContextConcatCTM (bitmapContext, CGAffineTransformMake (1, 0, 0, -1, 0, self.frame.size.height));
+        #endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
+        
         owner->drawRect (r);
+        
+        #if JUCE_ENABLE_IOS_REPAINT_CACHE
+            UIGraphicsPopContext();
+            auto imageOfBitmapContext = CGBitmapContextCreateImage(bitmapContext);
+            CGContextDrawImage(cg, self.frame, imageOfBitmapContext);
+            CGImageRelease(imageOfBitmapContext);
+        #endif /* JUCE_ENABLE_IOS_REPAINT_CACHE */
+ }
 }
 
 //==============================================================================
