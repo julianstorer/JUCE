@@ -34,7 +34,7 @@ static File createTempFile (const File& parentDirectory, String name,
 
 TemporaryFile::TemporaryFile (const String& suffix, const int optionFlags)
     : temporaryFile (createTempFile (File::getSpecialLocation (File::tempDirectory),
-                                     "temp_" + String::toHexString (Random::getSystemRandom().nextInt()),
+                                     "temp_" + String::toHexString (Random().nextInt()),
                                      suffix, optionFlags)),
       targetFile()
 {
@@ -43,7 +43,7 @@ TemporaryFile::TemporaryFile (const String& suffix, const int optionFlags)
 TemporaryFile::TemporaryFile (const File& target, const int optionFlags)
     : temporaryFile (createTempFile (target.getParentDirectory(),
                                      target.getFileNameWithoutExtension()
-                                       + "_temp" + String::toHexString (Random::getSystemRandom().nextInt()),
+                                       + "_temp" + String::toHexString (Random().nextInt()),
                                      target.getFileExtension(), optionFlags)),
       targetFile (target)
 {
