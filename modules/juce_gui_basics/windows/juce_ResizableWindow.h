@@ -206,9 +206,9 @@ public:
     //==============================================================================
     /** Returns a string which encodes the window's current size and position.
 
-        This string will encapsulate the window's size, position, and whether it's
-        in full-screen mode. It's intended for letting your application save and
-        restore a window's position.
+        This string will encapsulate the window's size, position, whether it's
+        in full-screen mode and wether it's visible. It's intended for letting your
+        application save and restore a window's position.
 
         Use the restoreWindowStateFromString() to restore from a saved state.
 
@@ -218,14 +218,17 @@ public:
 
     /** Restores the window to a previously-saved size and position.
 
-        This restores the window's size, position and full-screen status from an
+        This restores the window's size, position, full-screen and visibility status from a
         string that was previously created with the getWindowStateAsString()
         method.
+     
+        @param forceVisible         if true, then the visibility status from the provided previous
+                                    state will be ignored and forced to true.
 
         @returns false if the string wasn't a valid window state
         @see getWindowStateAsString
     */
-    bool restoreWindowStateFromString (const String& previousState);
+    bool restoreWindowStateFromString (const String& previousState, bool forceVisible = false);
 
 
     //==============================================================================
