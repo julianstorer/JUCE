@@ -294,7 +294,10 @@ public:
             vorbis_analysis_init (&vd, &vi);
             vorbis_block_init (&vd, &vb);
 
-            ogg_stream_init (&os, Random::getSystemRandom().nextInt());
+            {
+                Random r;
+                ogg_stream_init (&os, r.nextInt());
+            }
 
             OggVorbisNamespace::ogg_packet header, header_comm, header_code;
             vorbis_analysis_headerout (&vd, &vc, &header, &header_comm, &header_code);
