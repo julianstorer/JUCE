@@ -63,9 +63,13 @@ public:
 
     void performSelection (const MouseEvent& e, bool isMouseUp)
     {
+        auto* m = owner.getModel();
+        if (m && !m->shouldSelectedRowsChange (row))
+            return;
+
         owner.selectRowsBasedOnModifierKeys (row, e.mods, isMouseUp);
 
-        if (auto* m = owner.getModel())
+        if (m)
             m->listBoxItemClicked (row, e);
     }
 
@@ -949,6 +953,7 @@ Component* ListBoxModel::refreshComponentForRow (int, bool, Component* existingC
 void ListBoxModel::listBoxItemClicked (int, const MouseEvent&) {}
 void ListBoxModel::listBoxItemDoubleClicked (int, const MouseEvent&) {}
 void ListBoxModel::backgroundClicked (const MouseEvent&) {}
+bool ListBoxModel::shouldSelectedRowsChange (int) { return true; }
 void ListBoxModel::selectedRowsChanged (int) {}
 void ListBoxModel::deleteKeyPressed (int) {}
 void ListBoxModel::returnKeyPressed (int) {}

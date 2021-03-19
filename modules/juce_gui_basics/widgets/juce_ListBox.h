@@ -102,6 +102,17 @@ public:
     */
     virtual void backgroundClicked (const MouseEvent&);
 
+    /** Override this to prevent selection.
+
+        This will be called before a row is selected or deselected. If a range of
+        rows is selected all at once, this will just be called once for that event.
+        Return false to prevent selection. This returns true by default.
+
+        @param lastRowSelected      the last row that the user selected. If no
+                                    rows are currently selected, this may be -1.
+    */
+    virtual bool shouldSelectedRowsChange (int lastRowSelected);
+
     /** Override this to be informed when rows are selected or deselected.
 
         This will be called whenever a row is selected or deselected. If a range of
