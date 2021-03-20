@@ -130,4 +130,129 @@ IPAddress IPAddress::getInterfaceBroadcastAddress (const IPAddress& interfaceAdd
     return {};
 }
 
+int getInterfaceMtuSize( StringRef iname );
+int64 getInterfaceSpeed( StringRef iname );
+
+static bool findIndex( int idx, Array<NetworkInterface>& ifcs )
+{
+	if( idx < 1 )
+	{
+		return false;
+	}
+	for( int i =0; i < ifcs.size();i++ )
+	{
+		if( ifcs[i].getInterfaceIndex() == idx )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void NetworkInterface::findAllInterfaces(Array<NetworkInterface>& result)
+{
+	const int s = socket(AF_INET, SOCK_DGRAM, 0);
+	if (s != -1)
+	{
+		struct ifaddrs* addrs = nullptr;
+
+		if (getifaddrs(&addrs) != -1)
+		{
+			for (struct ifaddrs* ifa = addrs; ifa != nullptr; ifa = ifa->ifa_next)
+			{
+				InterfaceInfo i;
+				bool found = false;
+				struct ifreq ifr;
+				strcpy(ifr.ifr_name, ifa->ifa_name);
+				ifr.ifr_addr.sa_family = AF_INET;
+				String devName(ifa->ifa_name);
+				populateInterfaceInfo(ifa, i);
+
+				if (i.interfaceAddress.isNull())
+				{
+					continue;
+				}
+
+				for (int index = 0; index < result.size(); index++)
+				{
+					NetworkInterface ni = result[index];
+					if (ni.getDeviceName() == devName)
+					{
+						ni.addIPAddress(i.interfaceAddress);
+						result.set(index, ni);
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+				{
+					NetworkInterface ni(devName, devName, if_nametoindex(ifa->ifa_name));
+					ni.addIPAddress(i.interfaceAddress);
+
+					MACAddress ma;
+					if( MACAddress::getMacAddressForInterface( devName, ma ) )
+					{
+						ni.setMACAddress(ma);
+					}
+
+					if (ifa->ifa_flags & IFF_UP )
+					{
+#if	JUCE_LINUX
+						if (ifa->ifa_flags & IFF_RUNNING)
+						{
+#endif
+							ni.setInterfaceUp(true);
+#if	JUCE_LINUX
+						}
+#endif
+					}
+
+					int64 speed = getInterfaceSpeed( devName );
+					if( speed >= 0 )
+					{
+						ni.setRxSpeed( speed );
+						ni.setTxSpeed( speed );
+					}	
+					int mtu = getInterfaceMtuSize( devName );
+					if( mtu >= 0 )
+					{
+						ni.setMtuSize( mtu );
+					}
+
+					result.add(ni);
+				}
+			}
+
+			freeifaddrs(addrs);
+		}
+
+		::close(s);
+	}
+
+	/* add all non-operative interfaces */
+	for (unsigned int i = 1; i; i++)
+	{
+		char ifname[IF_NAMESIZE + 1];
+		
+		if( findIndex( i, result ) )
+		{
+			continue;
+		}
+		char *name = if_indextoname(i, ifname);
+		if (name)
+		{
+			String devName(name);
+			NetworkInterface ni(devName, devName, i);
+			result.add(ni);
+		}
+		else
+		{
+			break;
+		}	
+	}
+}
+
+
 } // namespace juce

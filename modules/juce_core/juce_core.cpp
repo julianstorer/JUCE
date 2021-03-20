@@ -144,6 +144,7 @@
 #include "misc/juce_ConsoleApplication.cpp"
 #include "network/juce_MACAddress.cpp"
 #include "network/juce_NamedPipe.cpp"
+#include "network/juce_NetworkInterface.cpp"
 #include "network/juce_Socket.cpp"
 #include "network/juce_IPAddress.cpp"
 #include "streams/juce_BufferedInputStream.cpp"

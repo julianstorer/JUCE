@@ -39,6 +39,8 @@ public:
     /** Populates a list of the MAC addresses of all the available network cards. */
     static void findAllAddresses (Array<MACAddress>& results);
 
+	static bool getMacAddressForInterface(StringRef iname, MACAddress &result);
+
     //==============================================================================
     /** Creates a null address (00-00-00-00-00-00). */
     MACAddress() noexcept;

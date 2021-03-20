@@ -55,6 +55,92 @@ void MACAddress::findAllAddresses (Array<MACAddress>& result)
     }
 }
 
+int getInterfaceMtuSize( StringRef iname )
+{
+	struct ifreq ifinfo;
+	int sd;
+	int ret;
+	const char *ifc = static_cast<const char*> (String(iname).toUTF8());
+
+	if (strlen(ifc) >= IFNAMSIZ)
+	{
+		return -1;
+	}
+
+	strcpy(ifinfo.ifr_name, ifc);
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	ret = ioctl(sd, SIOCGIFMTU, &ifinfo);
+	close(sd);
+
+	if ((ret == 0) && (ifinfo.ifr_mtu>0))
+	{
+		return ifinfo.ifr_mtu;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int64 getInterfaceSpeed( StringRef iname )
+{
+	struct ifreq ifinfo;
+	struct ethtool_cmd edata;
+	int ret;
+	int sd;
+	const char *ifc = static_cast<const char*> (String(iname).toUTF8());
+
+	if (strlen(ifc) >= IFNAMSIZ)
+	{
+		return -1;
+	}
+
+	strcpy(ifinfo.ifr_name, ifc);
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	ifinfo.ifr_data = (char *)&edata;
+	edata.cmd = ETHTOOL_GSET;
+	ret = ioctl(sd, SIOCETHTOOL, &ifinfo);
+	close(sd);
+
+	if (ret == 0)
+	{
+		return ethtool_cmd_speed( &edata ) * 1000000;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+
+bool MACAddress::getMacAddressForInterface(StringRef iname, MACAddress &result)
+{
+	struct ifreq ifinfo;
+	int sd;
+	int ret;
+	const char *ifc = static_cast<const char*> (String(iname).toUTF8());
+
+	if (strlen(ifc) >= IFNAMSIZ)
+	{
+		return false;
+	}
+
+	strcpy(ifinfo.ifr_name, ifc);
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	ret = ioctl(sd, SIOCGIFHWADDR, &ifinfo);
+	close(sd);
+
+	if ((ret == 0) && (ifinfo.ifr_hwaddr.sa_family == 1))
+	{
+		result = MACAddress((const uint8*)ifinfo.ifr_hwaddr.sa_data);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 bool JUCE_CALLTYPE Process::openEmailWithAttachments (const String& /* targetEmailAddress */,
                                                       const String& /* emailSubject */,

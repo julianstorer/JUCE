@@ -268,6 +268,25 @@ void MACAddress::findAllAddresses (Array<MACAddress>& /*result*/)
     // TODO
 }
 
+bool MACAddress::getMacAddressForInterface(StringRef /*iname*/, MACAddress & /*result*/)
+{
+    // TODO
+    return false;
+}
+
+int getInterfaceMtuSize( StringRef /*iname*/ )
+{
+    // TODO
+    return -1;
+}
+
+int64 getInterfaceSpeed( StringRef /*iname*/ )
+{
+    // TODO
+    return -1;
+}
+
+
 
 JUCE_API bool JUCE_CALLTYPE Process::openEmailWithAttachments (const String& /*targetEmailAddress*/,
                                                                const String& /*emailSubject*/,

@@ -588,6 +588,60 @@ void IPAddress::findAllAddresses (Array<IPAddress>& result, bool includeIPv6)
     }
 }
 
+bool MACAddress::getMacAddressForInterface(StringRef iname, MACAddress &result)
+{
+	GetAdaptersAddressesHelper addressesHelper;
+
+	if (addressesHelper.callGetAdaptersAddresses())
+	{
+		for (PIP_ADAPTER_ADDRESSES adapter = addressesHelper.adaptersAddresses; adapter != nullptr; adapter = adapter->Next)
+		{
+			String deviceName(adapter->AdapterName);
+			if (deviceName == iname)
+			{
+				MACAddress mac = MACAddress(adapter->PhysicalAddress);
+				result = mac;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+void NetworkInterface::findAllInterfaces(Array<NetworkInterface>& result)
+{
+	GetAdaptersAddressesHelper addressesHelper;
+
+	if (addressesHelper.callGetAdaptersAddresses())
+	{
+		for (PIP_ADAPTER_ADDRESSES adapter = addressesHelper.adaptersAddresses; adapter != nullptr; adapter = adapter->Next)
+		{
+			Array<IPAddress> addrs;
+			MACAddressHelpers::findAddresses(addrs, true, adapter->FirstUnicastAddress);
+
+			MACAddressHelpers::findAddresses(addrs, false, adapter->FirstUnicastAddress);
+
+			MACAddress mac = MACAddress(adapter->PhysicalAddress);
+
+			String deviceName(adapter->AdapterName);
+			String friendlyName(adapter->FriendlyName);
+
+			NetworkInterface ni(deviceName, friendlyName, adapter->IfIndex);
+			ni.setMACAddress(mac);
+			ni.addIPAddresses(addrs);
+			ni.setRxSpeed(adapter->ReceiveLinkSpeed);
+			ni.setTxSpeed(adapter->TransmitLinkSpeed);
+			ni.setMtuSize(adapter->Mtu);
+			ni.setInterfaceUp(adapter->OperStatus == IfOperStatusUp);
+
+			result.addIfNotAlreadyThere( ni );
+		}
+	}
+}
+
+
+
 IPAddress IPAddress::getInterfaceBroadcastAddress (const IPAddress&)
 {
     // TODO

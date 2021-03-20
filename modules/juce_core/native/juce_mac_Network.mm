@@ -57,6 +57,144 @@ void MACAddress::findAllAddresses (Array<MACAddress>& result)
     }
 }
 
+
+bool MACAddress::getMacAddressForInterface (StringRef iname, MACAddress &result)
+{
+    ifaddrs* addrs = nullptr;
+	bool ret = false;
+    String ifc = iname;
+
+    if (getifaddrs (&addrs) == 0)
+    {
+        for (const ifaddrs* cursor = addrs; cursor != nullptr; cursor = cursor->ifa_next)
+        {
+            // Required to avoid misaligned pointer access
+            sockaddr sto;
+            std::memcpy (&sto, cursor->ifa_addr, sizeof (sockaddr));
+
+            if (sto.sa_family == AF_LINK)
+            {
+                auto sadd = (const sockaddr_dl*) cursor->ifa_addr;
+
+               #ifndef IFT_ETHER
+                enum { IFT_ETHER = 6 };
+               #endif
+
+                if (sadd->sdl_type == IFT_ETHER)
+                {
+					String devicename = String(cursor->ifa_name);
+//                    printf( "dev: %s -- %s\n", static_cast<const char*> (devicename.toUTF8()), static_cast<const char*> (ifc.toUTF8()));
+                    if( devicename == ifc ) {
+						MACAddress ma = MACAddress (((const uint8*) sadd->sdl_data) + sadd->sdl_nlen);
+//                        printf( "mac: %s\n", static_cast<const char*> (ma.toString().toUTF8()));
+						result = ma;
+						ret = true;
+						break;
+					}
+               }
+            }
+        }
+
+        freeifaddrs (addrs);
+    }
+	return ret;
+}
+
+
+int getInterfaceMtuSize( StringRef iname ) {
+	struct ifreq ifinfo;
+	int sd;
+	int ret;
+	const char *ifc = static_cast<const char*> (String(iname).toUTF8());
+
+	if (strlen(ifc) >= IFNAMSIZ) {
+		return -1;
+	}
+
+	strcpy(ifinfo.ifr_name, ifc);
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	ret = ioctl(sd, SIOCGIFMTU, &ifinfo);
+	close(sd);
+
+	if ((ret == 0) && (ifinfo.ifr_mtu>0)) {
+		return ifinfo.ifr_mtu;
+	}
+	else {
+		return -1;
+	}
+}
+
+
+static int64 speedFromMediaWord( int mediaWord )
+{
+	if( (mediaWord & IFM_NMASK ) != IFM_ETHER )
+	{
+		return -1;
+	}
+	switch( mediaWord & IFM_TMASK )
+	{
+        case IFM_HPNA_1:
+            return 1 * 1000000;
+        case IFM_10_T:
+		case IFM_10_2:
+		case IFM_10_5:
+		case IFM_10_STP:
+		case IFM_10_FL:
+			return 10 * 1000000;
+		case IFM_100_TX:
+		case IFM_100_FX:
+		case IFM_100_T4:
+		case IFM_100_VG:
+		case IFM_100_T2:
+			return 100 * 1000000;
+		case IFM_1000_SX:
+		case IFM_1000_LX:
+		case IFM_1000_CX:
+		case IFM_1000_T:
+			return 1000 * 1000000;
+        case IFM_2500_T:
+            return 2500 * 1000000LL;
+        case IFM_5000_T:
+            return 5000 * 1000000LL;
+        case IFM_10G_T:
+        case IFM_10G_SR:
+        case IFM_10G_LR:
+        case IFM_10G_CX4:
+            return 10000 * 1000000LL;
+	}
+	return -1;
+}
+
+
+int64 getInterfaceSpeed( StringRef iname )
+{
+	struct ifmediareq ifmr;
+	int sd;
+	int ret;
+	const char *ifc = static_cast<const char*> (String(iname).toUTF8());
+
+	if (strlen(ifc) >= IFNAMSIZ)
+	{
+		return -1;
+	}
+
+    memset( &ifmr, 0, sizeof(ifmr));
+	strcpy(ifmr.ifm_name, ifc);
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	ret = ioctl(sd, SIOCGIFMEDIA, &ifmr);
+	close(sd);
+
+	if (ret == 0)
+	{
+		return speedFromMediaWord( ifmr.ifm_active );
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+
 //==============================================================================
 bool JUCE_CALLTYPE Process::openEmailWithAttachments (const String& targetEmailAddress,
                                                       const String& emailSubject,
