@@ -340,6 +340,22 @@ namespace AAXClasses
         }
     }
 
+    static AAX_EParameterOrientation getAAXParameterOrientation (AudioProcessorParameter::Orientation orientation) noexcept
+    {
+        const auto topToBottom = AAX_eParameterOrientation_BottomMinTopMax | AAX_eParameterOrientation_LeftMinRightMax | AAX_eParameterOrientation_RotaryLeftMinRightMax;
+        const auto bottomToTop = AAX_eParameterOrientation_TopMinBottomMax | AAX_eParameterOrientation_RightMinLeftMax | AAX_eParameterOrientation_RotaryRightMinLeftMax;
+
+        switch (orientation)
+        {
+            default:
+            case AudioProcessorParameter::fillFromLeft:                  return topToBottom | AAX_eParameterOrientation_RotarySingleDotMode;
+            case AudioProcessorParameter::fillFromRight:                 return bottomToTop | AAX_eParameterOrientation_RotarySingleDotMode;
+            case AudioProcessorParameter::spreadFromMiddle:              return AAX_eParameterOrientation_RotaryBoostCutMode;
+            case AudioProcessorParameter::spreadFromMiddleClockwise:     return topToBottom | AAX_eParameterOrientation_RotarySpreadMode;
+            case AudioProcessorParameter::spreadFromMiddleAntiClockwise: return bottomToTop | AAX_eParameterOrientation_RotarySpreadMode;
+        }
+    }
+
     static Colour getColourFromHighlightEnum (AAX_EHighlightColor colour) noexcept
     {
         switch (colour)
@@ -1593,11 +1609,7 @@ namespace AAXClasses
                                                             : AAX_eParameterType_Continuous);
                #endif
 
-                parameter->SetOrientation (juceParam->isOrientationInverted()
-                                            ? (AAX_eParameterOrientation_RightMinLeftMax | AAX_eParameterOrientation_TopMinBottomMax
-                                                | AAX_eParameterOrientation_RotarySingleDotMode | AAX_eParameterOrientation_RotaryRightMinLeftMax)
-                                            : (AAX_eParameterOrientation_LeftMinRightMax | AAX_eParameterOrientation_BottomMinTopMax
-                                                | AAX_eParameterOrientation_RotarySingleDotMode | AAX_eParameterOrientation_RotaryLeftMinRightMax));
+                parameter->SetOrientation (getAAXParameterOrientation (juceParam->getOrientation()));
 
                 mParameterManager.AddParameter (parameter);
 

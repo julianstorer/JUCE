@@ -1541,13 +1541,14 @@ void AudioProcessorParameter::sendValueChangedMessageToListeners (float newValue
     }
 }
 
-bool AudioProcessorParameter::isOrientationInverted() const                      { return false; }
-bool AudioProcessorParameter::isAutomatable() const                              { return true; }
-bool AudioProcessorParameter::isMetaParameter() const                            { return false; }
-AudioProcessorParameter::Category AudioProcessorParameter::getCategory() const   { return genericParameter; }
-int AudioProcessorParameter::getNumSteps() const                                 { return AudioProcessor::getDefaultNumParameterSteps(); }
-bool AudioProcessorParameter::isDiscrete() const                                 { return false; }
-bool AudioProcessorParameter::isBoolean() const                                  { return false; }
+bool AudioProcessorParameter::isOrientationInverted() const                          { return false; }
+AudioProcessorParameter::Orientation AudioProcessorParameter::getOrientation() const { return isOrientationInverted() ? fillFromRight : fillFromLeft; }
+bool AudioProcessorParameter::isAutomatable() const                                  { return true; }
+bool AudioProcessorParameter::isMetaParameter() const                                { return false; }
+AudioProcessorParameter::Category AudioProcessorParameter::getCategory() const       { return genericParameter; }
+int AudioProcessorParameter::getNumSteps() const                                     { return AudioProcessor::getDefaultNumParameterSteps(); }
+bool AudioProcessorParameter::isDiscrete() const                                     { return false; }
+bool AudioProcessorParameter::isBoolean() const                                      { return false; }
 
 String AudioProcessorParameter::getText (float value, int /*maximumStringLength*/) const
 {
