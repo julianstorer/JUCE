@@ -19,7 +19,7 @@ offline docs, see below.
 ## Dependencies
 
 - doxygen
-- python
+- python (version 3.x)
 - make
 - graphviz (to generate inheritance diagrams)
 
