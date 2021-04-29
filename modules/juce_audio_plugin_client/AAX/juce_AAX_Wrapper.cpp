@@ -2319,6 +2319,12 @@ namespace AAXClasses
         check (descriptor.AddProcPtr ((void*) JuceAAX_GUI::Create,        kAAX_ProcPtrID_Create_EffectGUI));
         check (descriptor.AddProcPtr ((void*) JuceAAX_Processor::Create,  kAAX_ProcPtrID_Create_EffectParameters));
 
+      #ifdef JucePlugin_AAXRequiresChunkCallsOnMainThread
+        AAX_IPropertyMap *properties = descriptor.NewPropertyMap();
+        properties->AddProperty(AAX_eProperty_RequiresChunkCallsOnMainThread, 1);
+        descriptor.SetProperties(properties);
+      #endif
+      
         Array<int32> pluginIds;
        #if JucePlugin_IsMidiEffect
         // MIDI effect plug-ins do not support any audio channels
