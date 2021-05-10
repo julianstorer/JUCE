@@ -38,11 +38,12 @@ public:
 
     void reset (const Rectangle<int>& finalBounds,
                 float finalAlpha,
+                int millisecondsBeforeStartMoving,
                 int millisecondsToSpendMoving,
                 bool useProxyComponent,
                 double startSpd, double endSpd)
     {
-        msElapsed = 0;
+        msElapsed = -jmax (0, millisecondsBeforeStartMoving);
         msTotal = jmax (1, millisecondsToSpendMoving);
         lastProgress = 0;
         destination = finalBounds;
@@ -76,6 +77,8 @@ public:
                                        : component.get())
         {
             msElapsed += elapsed;
+            if (msElapsed < 0)
+                return true;
             double newProgress = msElapsed / (double) msTotal;
 
             if (newProgress >= 0 && newProgress < 1.0)
@@ -230,6 +233,18 @@ void ComponentAnimator::animateComponent (Component* const component,
                                           const double startSpeed,
                                           const double endSpeed)
 {
+    animateComponent(component, finalBounds, finalAlpha, 0, millisecondsToSpendMoving, useProxyComponent, startSpeed, endSpeed);
+}
+
+void ComponentAnimator::animateComponent (Component* const component,
+                                          const Rectangle<int>& finalBounds,
+                                          const float finalAlpha,
+                                          const int millisecondsBeforeStartMoving,
+                                          const int millisecondsToSpendMoving,
+                                          const bool useProxyComponent,
+                                          const double startSpeed,
+                                          const double endSpeed)
+{
     // the speeds must be 0 or greater!
     jassert (startSpeed >= 0 && endSpeed >= 0);
 
@@ -244,7 +259,8 @@ void ComponentAnimator::animateComponent (Component* const component,
             sendChangeMessage();
         }
 
-        at->reset (finalBounds, finalAlpha, millisecondsToSpendMoving,
+        at->reset (finalBounds, finalAlpha,
+                   millisecondsBeforeStartMoving, millisecondsToSpendMoving,
                    useProxyComponent, startSpeed, endSpeed);
 
         if (! isTimerRunning())
