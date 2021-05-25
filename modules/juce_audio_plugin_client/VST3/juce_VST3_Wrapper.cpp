@@ -3594,6 +3594,10 @@ struct JucePluginFactory  : public IPluginFactory3
 
     tresult PLUGIN_API setHostContext (FUnknown* context) override
     {
+        // WaveLab 10 on OS X (and maybe other WaveLabs): if the context object gets smart referenced here,
+        // a crash happens on shutdown in case multiple instances were active.
+        if (getHostType().isWavelab()) return kNotImplemented;
+        
         host.loadFrom (context);
 
         if (host != nullptr)
