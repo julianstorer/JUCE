@@ -105,21 +105,61 @@ namespace juce
     [super dealloc];
 }
 
-- (void) applicationDidFinishLaunching: (UIApplication*) application
-{
+- (BOOL) application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
     ignoreUnused (application);
     initialiseJuce_GUI();
 
     if (auto* app = JUCEApplicationBase::createInstance())
     {
         if (! app->initialiseApp())
-            exit (app->shutdownApp());
+        {
+            exit(app->shutdownApp());
+            return NO;
+        }
     }
     else
     {
         jassertfalse; // you must supply an application object for an iOS app!
     }
+
+        return YES;
 }
+
+- (BOOL) application: (UIApplication*) application willFinishLaunchingWithOptions: (NSDictionary<UIApplicationLaunchOptionsKey, id>*) launchOptions
+{
+    return YES;
+}
+
+-(BOOL) application: (UIApplication*) application continueUserActivity: (NSUserActivity*) userActivity restorationHandler: (void (^)(NSArray * _Nullable)) restorationHandler
+{
+    // Check whether the activity was from a web page redirect to the app.
+    if ([userActivity.activityType isEqualToString: NSUserActivityTypeBrowsingWeb]) {
+        // Get the URL from the UserActivty Object.
+        NSURL *url = userActivity.webpageURL;
+
+        if (auto* app = JUCEApplicationBase::getInstance())
+        {
+            auto commandLine (nsStringToJuce ([url absoluteString]));
+            app->anotherInstanceStarted (commandLine);
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (BOOL) application: (UIApplication*) application openURL: (NSURL*) url sourceApplication: (NSString*) sourceApplication annotation: (id) annotation {
+
+    if (auto* app = JUCEApplicationBase::getInstance())
+    {
+        auto commandLine (nsStringToJuce ([url absoluteString]));
+        app->anotherInstanceStarted (commandLine);
+        return YES;
+    }
+
+    return NO;
+}
+
 
 - (void) applicationWillTerminate: (UIApplication*) application
 {

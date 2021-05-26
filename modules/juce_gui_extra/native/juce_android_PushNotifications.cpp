@@ -1547,6 +1547,39 @@ struct PushNotifications::Pimpl
             && env->CallBooleanMethod (extras, AndroidBundle.containsKey, javaString ("google.message_id").get());
     }
 
+    static bool isBrowsableNotificationIntent (jobject intent)
+    {
+        auto* env = getEnv();
+
+        auto intentAction = juceString ((jstring) env->CallObjectMethod (intent, AndroidIntent.getAction));
+
+        auto isView = intentAction == "android.intent.action.VIEW";
+
+        auto categories = LocalRef<jobject> (env->CallObjectMethod (intent, AndroidIntent.getCategories));
+
+        int categoriesNum = categories != nullptr
+                            ? env->CallIntMethod (categories, JavaSet.size)
+                            : 0;
+
+        if (categoriesNum == 0)
+            return false;
+
+        if (! env->CallBooleanMethod (categories, JavaSet.contains, javaString ("android.intent.category.BROWSABLE").get()))
+            return false;
+
+        return isView;
+    }
+
+    static void callAnotherInstanceStartedWithIntentURI (jobject intent)
+    {
+        auto* env = getEnv();
+
+        auto intentDataUri = LocalRef<jobject> (env->CallObjectMethod (intent, AndroidIntent.getData));
+        auto intentDataString = juceString ((jstring) env->CallObjectMethod (intentDataUri, AndroidUri.toString));
+
+        JUCEApplication::getInstance()->anotherInstanceStarted (intentDataString);
+    }
+
     PushNotifications& owner;
 };
 
@@ -1630,6 +1663,10 @@ bool juce_handleNotificationIntent (void* intent)
         if (instance)
             instance->pimpl->notifyListenersAboutLocalNotification (LocalRef<jobject> ((jobject) intent));
 
+        return true;
+    }
+    else if (PushNotifications::Pimpl::isBrowsableNotificationIntent ((jobject) intent))
+    {
         return true;
     }
   #if defined(JUCE_FIREBASE_MESSAGING_SERVICE_CLASSNAME)
