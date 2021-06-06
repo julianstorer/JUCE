@@ -244,7 +244,7 @@ void FLAC__cpu_info(FLAC__CPUInfo *info)
 		struct sigaction sigill_save;
 		struct sigaction sigill_sse;
 		sigill_sse.sa_sigaction = sigill_handler_sse_os;
-      #ifdef __ANDROID__
+      #if defined(__ANDROID__) || true
         sigemptyset (&sigill_sse.sa_mask);
       #else
 		__sigemptyset(&sigill_sse.sa_mask);
