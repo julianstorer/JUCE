@@ -837,7 +837,8 @@ struct iOSAudioIODevice::Pimpl      : public AudioPlayHead,
         OSStatus err = noErr;
 
         recordXruns (time, numFrames);
-
+        lastHostTime = time->mHostTime;
+        
         const bool useInput = channelData.areInputChannelsAvailable();
 
         if (useInput)
@@ -1338,6 +1339,7 @@ struct iOSAudioIODevice::Pimpl      : public AudioPlayHead,
     bool firstHostTime;
     Float64 lastSampleTime;
     unsigned int lastNumFrames;
+    uint64 lastHostTime;
     int xrun;
 
     JUCE_DECLARE_NON_COPYABLE (Pimpl)
@@ -1390,6 +1392,8 @@ int iOSAudioIODevice::getXRunCount() const noexcept                 { return pim
 
 void iOSAudioIODevice::setMidiMessageCollector (MidiMessageCollector* collector) { pimpl->messageCollector = collector; }
 AudioPlayHead* iOSAudioIODevice::getAudioPlayHead() const           { return pimpl.get(); }
+
+uint64 iOSAudioIODevice::getLastFrameHostTime() const               { return pimpl->lastHostTime; }
 
 bool iOSAudioIODevice::isInterAppAudioConnected() const             { return pimpl->interAppAudioConnected; }
 #if JUCE_MODULE_AVAILABLE_juce_graphics

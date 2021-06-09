@@ -68,6 +68,8 @@ public:
     void setMidiMessageCollector (MidiMessageCollector*);
     AudioPlayHead* getAudioPlayHead() const;
 
+    uint64 getLastFrameHostTime() const;
+    
     //==============================================================================
     bool isInterAppAudioConnected() const;
    #if JUCE_MODULE_AVAILABLE_juce_graphics
