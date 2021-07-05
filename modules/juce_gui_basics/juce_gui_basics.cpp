@@ -136,6 +136,7 @@ namespace juce
 #include "mouse/juce_MouseEvent.cpp"
 #include "mouse/juce_MouseInactivityDetector.cpp"
 #include "mouse/juce_MouseListener.cpp"
+#include "mouse/juce_MouseInterceptor.cpp"
 #include "keyboard/juce_CaretComponent.cpp"
 #include "keyboard/juce_KeyboardFocusTraverser.cpp"
 #include "keyboard/juce_KeyListener.cpp"

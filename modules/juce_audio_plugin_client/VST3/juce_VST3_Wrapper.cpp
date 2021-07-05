@@ -1896,6 +1896,7 @@ private:
 
         //==============================================================================
         struct ContentWrapperComponent  : public Component
+                                        , public MouseInterceptor
                                        #if JUCE_WINDOWS && JUCE_WIN_PER_MONITOR_DPI_AWARE
                                         , public Timer
                                        #endif
@@ -1927,6 +1928,7 @@ private:
 
                     addAndMakeVisible (pluginEditor.get());
                     pluginEditor->setTopLeftPosition (0, 0);
+                    pluginEditor->addMouseInterceptor (this, true);
 
                     lastBounds = getSizeToContainChild();
 
@@ -2065,13 +2067,68 @@ private:
             }
            #endif
 
+            void showContextMenu (Vst::IComponentHandler* handler, IPlugView* view, const Vst::ParamID* id, UCoord x, UCoord y)
+            {
+                if (handler == nullptr || view == nullptr)
+                    return;
+
+                FUnknownPtr<Vst::IComponentHandler3> h (handler);
+                if (h == nullptr)
+                    return;
+
+                auto* menu = h->createContextMenu (view, id);
+                if (menu != nullptr)
+                {
+                    menu->popup (x, y);
+                    menu->release();
+                }
+            }
+
+            bool interceptMouseDown (const MouseEvent& e) override
+            {
+                interceptedMouseDown = false;
+
+                if (pluginEditor != nullptr && (e.mods.isRightButtonDown() || (e.mods.isLeftButtonDown() && e.mods.isCtrlDown())))
+                {
+                    const auto parameterIndex = pluginEditor->getControlParameterIndex (*e.eventComponent);
+
+                    if (parameterIndex != -1)
+                    {
+                        if (auto* peer = ComponentPeer::getPeerFor (this))
+                        {
+                            interceptedMouseDown = true;
+                            auto position = e.getScreenPosition() - peer->localToGlobal (Point<int> (0, 0));
+
+                            auto vstParamID = static_cast<Vst::ParamID> (parameterIndex);
+
+                            if (owner.owner != nullptr)
+                                vstParamID = owner.owner->audioProcessor->getVSTParamIDForIndex (parameterIndex);
+
+                            showContextMenu (owner.getController()->getComponentHandler(), &owner, &vstParamID, position.getX(), position.getY());
+                        }
+                    }
+                }
+
+                return interceptedMouseDown;
+            }
+
+            bool interceptMouseDrag (const MouseEvent& e) override
+            {
+                return interceptedMouseDown;
+            }
+
+            bool interceptMouseUp (const MouseEvent& e) override
+            {
+                return interceptedMouseDown;
+            }
+
             std::unique_ptr<AudioProcessorEditor> pluginEditor;
 
         private:
             JuceVST3Editor& owner;
             FakeMouseMoveGenerator fakeMouseGenerator;
             Rectangle<int> lastBounds;
-            bool resizingChild = false, resizingParent = false;
+            bool resizingChild = false, resizingParent = false, interceptedMouseDown = false;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ContentWrapperComponent)
         };

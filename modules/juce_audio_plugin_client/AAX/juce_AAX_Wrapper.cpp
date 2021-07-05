@@ -576,6 +576,7 @@ namespace AAXClasses
 
         //==============================================================================
         struct ContentWrapperComponent  : public Component
+                                        , public MouseInterceptor
         {
             ContentWrapperComponent (JuceAAX_GUI& gui, AudioProcessor& plugin)
                 : owner (gui)
@@ -590,7 +591,7 @@ namespace AAXClasses
                 {
                     lastValidSize = pluginEditor->getLocalBounds();
                     setBounds (lastValidSize);
-                    pluginEditor->addMouseListener (this, true);
+                    pluginEditor->addMouseInterceptor (this, true);
                 }
 
                 ignoreUnused (fakeMouseGenerator);
@@ -612,7 +613,7 @@ namespace AAXClasses
             }
 
             template <typename MethodType>
-            void callMouseMethod (const MouseEvent& e, MethodType method)
+            bool callMouseMethod (const MouseEvent& e, MethodType method)
             {
                 if (auto* vc = owner.GetViewContainer())
                 {
@@ -623,14 +624,21 @@ namespace AAXClasses
                         uint32_t mods = 0;
                         vc->GetModifiers (&mods);
 
-                        (vc->*method) (aaxParamID, mods);
+                        // This fixes an issue with GetModifiers() which doesn't
+                        // handle the right mouse button for some reason.
+                        if (e.mods.isRightButtonDown())
+                            mods |= AAX_eModifiers_SecondaryButton;
+
+                        return (vc->*method) (aaxParamID, mods) == AAX_SUCCESS;
                     }
                 }
+
+                return false;
             }
 
-            void mouseDown (const MouseEvent& e) override  { callMouseMethod (e, &AAX_IViewContainer::HandleParameterMouseDown); }
-            void mouseUp   (const MouseEvent& e) override  { callMouseMethod (e, &AAX_IViewContainer::HandleParameterMouseUp); }
-            void mouseDrag (const MouseEvent& e) override  { callMouseMethod (e, &AAX_IViewContainer::HandleParameterMouseDrag); }
+            bool interceptMouseDown (const MouseEvent& e) override  { return interceptedMouseDown = callMouseMethod (e, &AAX_IViewContainer::HandleParameterMouseDown); }
+            bool interceptMouseUp   (const MouseEvent& e) override  { return interceptedMouseDown || callMouseMethod (e, &AAX_IViewContainer::HandleParameterMouseUp); }
+            bool interceptMouseDrag (const MouseEvent& e) override  { return interceptedMouseDown || callMouseMethod (e, &AAX_IViewContainer::HandleParameterMouseDrag); }
 
             void parentSizeChanged() override
             {
@@ -675,6 +683,8 @@ namespace AAXClasses
            #endif
             FakeMouseMoveGenerator fakeMouseGenerator;
             juce::Rectangle<int> lastValidSize;
+
+            bool interceptedMouseDown = false;
 
             JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ContentWrapperComponent)
         };

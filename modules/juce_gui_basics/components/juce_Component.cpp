@@ -165,6 +165,145 @@ private:
     JUCE_DECLARE_NON_COPYABLE (MouseListenerList)
 };
 
+class Component::MouseInterceptorList
+{
+public:
+    MouseInterceptorList() noexcept {}
+
+    void addListener (MouseInterceptor* newListener, bool wantsEventsForAllNestedChildComponents)
+    {
+        if (! listeners.contains (newListener))
+        {
+            if (wantsEventsForAllNestedChildComponents)
+            {
+                listeners.insert (0, newListener);
+                ++numDeepMouseInterceptors;
+            }
+            else
+            {
+                listeners.add (newListener);
+            }
+        }
+    }
+
+    void removeListener (MouseInterceptor* listenerToRemove)
+    {
+        auto index = listeners.indexOf (listenerToRemove);
+
+        if (index >= 0)
+        {
+            if (index < numDeepMouseInterceptors)
+                --numDeepMouseInterceptors;
+
+            listeners.remove (index);
+        }
+    }
+
+    // g++ 4.8 cannot deduce the parameter pack inside the function pointer when it has more than one element
+   #if defined(__GNUC__) && __GNUC__ < 5 && ! defined(__clang__)
+    template <typename... Params>
+    static bool sendMouseEvent (Component& comp, Component::BailOutChecker& checker,
+                                bool (MouseInterceptor::*eventMethod) (const MouseEvent&),
+                                Params... params)
+    {
+        return sendMouseEvent <decltype (eventMethod), Params...> (comp, checker, eventMethod, params...);
+    }
+
+    template <typename... Params>
+    static bool sendMouseEvent (Component& comp, Component::BailOutChecker& checker,
+                                bool (MouseInterceptor::*eventMethod) (const MouseEvent&, const MouseWheelDetails&),
+                                Params... params)
+    {
+        return sendMouseEvent <decltype (eventMethod), Params...> (comp, checker, eventMethod, params...);
+    }
+
+    template <typename... Params>
+    static bool sendMouseEvent (Component& comp, Component::BailOutChecker& checker,
+                                bool (MouseInterceptor::*eventMethod) (const MouseEvent&, float),
+                                Params... params)
+    {
+        return sendMouseEvent <decltype (eventMethod), Params...> (comp, checker, eventMethod, params...);
+    }
+
+    template <typename EventMethod, typename... Params>
+    static bool sendMouseEvent (Component& comp, Component::BailOutChecker& checker,
+                                EventMethod eventMethod,
+                                Params... params)
+   #else
+    template <typename... Params>
+    static bool sendMouseEvent (Component& comp, Component::BailOutChecker& checker,
+                                bool (MouseInterceptor::*eventMethod) (Params...),
+                                Params... params)
+   #endif
+    {
+        if (checker.shouldBailOut())
+            return true;
+
+        if (auto* list = comp.mouseInterceptors.get())
+        {
+            for (int i = list->listeners.size(); --i >= 0;)
+            {
+                if ((list->listeners.getUnchecked (i)->*eventMethod) (params...))
+                    return true;
+
+                if (checker.shouldBailOut())
+                    return true;
+
+                i = jmin (i, list->listeners.size());
+            }
+        }
+
+        for (Component* p = comp.parentComponent; p != nullptr; p = p->parentComponent)
+        {
+            if (auto* list = p->mouseInterceptors.get())
+            {
+                if (list->numDeepMouseInterceptors > 0)
+                {
+                    BailOutChecker2 checker2 (checker, p);
+
+                    for (int i = list->numDeepMouseInterceptors; --i >= 0;)
+                    {
+                        if ((list->listeners.getUnchecked (i)->*eventMethod) (params...))
+                            return true;
+
+                        if (checker2.shouldBailOut())
+                            return true;
+
+                        i = jmin (i, list->numDeepMouseInterceptors);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+private:
+    Array<MouseInterceptor*> listeners;
+    int numDeepMouseInterceptors = 0;
+
+    struct BailOutChecker2
+    {
+        BailOutChecker2 (Component::BailOutChecker& boc, Component* comp)
+            : checker (boc), safePointer (comp)
+        {
+        }
+
+        bool shouldBailOut() const noexcept
+        {
+            return checker.shouldBailOut() || safePointer == nullptr;
+        }
+
+    private:
+        Component::BailOutChecker& checker;
+        const WeakReference<Component> safePointer;
+
+        JUCE_DECLARE_NON_COPYABLE (BailOutChecker2)
+    };
+
+    JUCE_DECLARE_NON_COPYABLE (MouseInterceptorList)
+};
+
 //==============================================================================
 struct FocusRestorer
 {
@@ -2348,6 +2487,29 @@ void Component::removeMouseListener (MouseListener* listenerToRemove)
         mouseListeners->removeListener (listenerToRemove);
 }
 
+void Component::addMouseInterceptor (MouseInterceptor* newInterceptor,
+                                     bool wantsEventsForAllNestedChildComponents)
+{
+    // if component methods are being called from threads other than the message
+    // thread, you'll need to use a MessageManagerLock object to make sure it's thread-safe.
+    JUCE_ASSERT_MESSAGE_MANAGER_IS_LOCKED
+
+    if (mouseInterceptors == nullptr)
+        mouseInterceptors.reset (new MouseInterceptorList());
+
+    mouseInterceptors->addListener (newInterceptor, wantsEventsForAllNestedChildComponents);
+}
+
+void Component::removeMouseInterceptor (MouseInterceptor* interceptorToRemove)
+{
+    // if component methods are being called from threads other than the message
+    // thread, you'll need to use a MessageManagerLock object to make sure it's thread-safe.
+    JUCE_ASSERT_MESSAGE_MANAGER_IS_LOCKED
+
+    if (mouseInterceptors != nullptr)
+        mouseInterceptors->removeListener (interceptorToRemove);
+}
+
 //==============================================================================
 void Component::internalMouseEnter (MouseInputSource source, Point<float> relativePos, Time time)
 {
@@ -2465,6 +2627,10 @@ void Component::internalMouseDown (MouseInputSource source, Point<float> relativ
     const MouseEvent me (source, relativePos, source.getCurrentModifiers(), pressure,
                          orientation, rotation, tiltX, tiltY, this, this, time, relativePos,
                          time, source.getNumberOfMultipleClicks(), false);
+
+    if (MouseInterceptorList::template sendMouseEvent<const MouseEvent&> (*this, checker, &MouseInterceptor::interceptMouseDown, me))
+        return;
+
     mouseDown (me);
 
     if (checker.shouldBailOut())
@@ -2492,6 +2658,10 @@ void Component::internalMouseUp (MouseInputSource source, Point<float> relativeP
                          source.getLastMouseDownTime(),
                          source.getNumberOfMultipleClicks(),
                          source.isLongPressOrDrag());
+
+    if (MouseInterceptorList::template sendMouseEvent<const MouseEvent&> (*this, checker, &MouseInterceptor::interceptMouseUp, me))
+        return;
+
     mouseUp (me);
 
     if (checker.shouldBailOut())
@@ -2531,6 +2701,10 @@ void Component::internalMouseDrag (MouseInputSource source, Point<float> relativ
                              source.getLastMouseDownTime(),
                              source.getNumberOfMultipleClicks(),
                              source.isLongPressOrDrag());
+
+        if (MouseInterceptorList::template sendMouseEvent<const MouseEvent&> (*this, checker, &MouseInterceptor::interceptMouseDrag, me))
+            return;
+
         mouseDrag (me);
 
         if (checker.shouldBailOut())

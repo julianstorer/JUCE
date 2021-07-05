@@ -1755,6 +1755,19 @@ public:
     */
     void removeMouseListener (MouseListener* listenerToRemove);
 
+    /** Registers a listener to be told when mouse events occur in this component,
+        before that component gets them so that they can be blocked from entering
+        the target component.
+        @see removeMouseInterceptor, MouseInterceptor
+     */
+    void addMouseInterceptor (MouseInterceptor* newInterceptor,
+                              bool wantsEventsForAllNestedChildComponents);
+
+    /** Deregisters a mouse listener.
+        @see removeMouseInterceptor, MouseInterceptor
+    */
+    void removeMouseInterceptor (MouseInterceptor* interceptorToRemove);
+
     //==============================================================================
     /** Adds a listener that wants to hear about keypresses that this component receives.
 
@@ -2486,6 +2499,8 @@ private:
 
     class MouseListenerList;
     std::unique_ptr<MouseListenerList> mouseListeners;
+    class MouseInterceptorList;
+    std::unique_ptr<MouseInterceptorList> mouseInterceptors;
     std::unique_ptr<Array<KeyListener*>> keyListeners;
     ListenerList<ComponentListener> componentListeners;
     NamedValueSet properties;
