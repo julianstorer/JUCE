@@ -344,9 +344,14 @@ public:
         By default this is true, and the user can enter values into the textbox,
         but it can be turned off if that's not suitable.
 
+        @param shouldBeEditable         determines if the text box is editable
+        @param editOnDoubleClick        if true the text box will be editable on double-click
+                                        otherwise it will be editable on single-click. This
+                                        argument has no effect if shouldBeEditable is false
+     
         @see setTextBoxStyle, getValueFromText, getTextFromValue
     */
-    void setTextBoxIsEditable (bool shouldBeEditable);
+    void setTextBoxIsEditable (bool shouldBeEditable, bool editOnDoubleClick = false);
 
     /** Returns true if the text-box is read-only.
         @see setTextBoxStyle
