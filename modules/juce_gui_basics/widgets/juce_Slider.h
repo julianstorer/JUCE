@@ -424,6 +424,12 @@ public:
     */
     void setNormalisableRange (NormalisableRange<double> newNormalisableRange);
 
+    /** Returns the NormalisableRange used for the Slider values.
+
+        @see setNormalisableRange
+     */
+    NormalisableRange<double> getNormalisableRange() const noexcept;
+
     /** Returns the slider's range. */
     Range<double> getRange() const noexcept;
 
@@ -609,6 +615,12 @@ public:
 
     /** You can assign a lambda that will be used to convert the slider's normalised position to a textual value. */
     std::function<String (double)> textFromValueFunction;
+
+    /** You can assign a lambda that will be used to convert the slider's proportion of the thumb to the value. */
+    std::function<double (double)> proportionOfLengthToValueFunction;
+
+    /** You can assign a lambda that will be used to convert the slider's value to the proportion place of the thumb. */
+    std::function<double (double)> valueToProportionOfLengthFunction;
 
     //==============================================================================
     /** This lets you choose whether double-clicking or single-clicking with a specified

@@ -1510,6 +1510,7 @@ double Slider::getInterval() const noexcept      { return pimpl->normRange.inter
 void Slider::setRange (double newMin, double newMax, double newInt)      { pimpl->setRange (newMin, newMax, newInt); }
 void Slider::setRange (Range<double> newRange, double newInt)            { pimpl->setRange (newRange.getStart(), newRange.getEnd(), newInt); }
 void Slider::setNormalisableRange (NormalisableRange<double> newRange)   { pimpl->setNormalisableRange (newRange); }
+NormalisableRange<double> Slider::getNormalisableRange() const noexcept  { return pimpl->normRange; }
 
 double Slider::getValue() const                  { return pimpl->getValue(); }
 Value& Slider::getValueObject() noexcept         { return pimpl->currentValue; }
@@ -1599,11 +1600,17 @@ double Slider::getValueFromText (const String& text)
 
 double Slider::proportionOfLengthToValue (double proportion)
 {
+    if (proportionOfLengthToValueFunction)
+        return proportionOfLengthToValueFunction (proportion);
+
     return pimpl->normRange.convertFrom0to1 (proportion);
 }
 
 double Slider::valueToProportionOfLength (double value)
 {
+    if (valueToProportionOfLengthFunction)
+        valueToProportionOfLengthFunction (value);
+
     return pimpl->normRange.convertTo0to1 (value);
 }
 
