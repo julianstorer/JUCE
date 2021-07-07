@@ -190,7 +190,7 @@ bool AudioProcessor::setChannelLayoutOfBus (bool isInputBus, int busIndex, const
     {
         auto layouts = bus->getBusesLayoutForLayoutChangeOfBus (layout);
 
-        if (layouts.getChannelSet (isInputBus, busIndex) == layout)
+        if (layouts.getChannelSet (isInputBus, busIndex) == layout || layout.isDisabled())
             return applyBusLayouts (layouts);
 
         return false;
