@@ -709,6 +709,18 @@ void MidiKeyboardComponent::updateNoteUnderMouse (const MouseEvent& e, bool isDo
 
 void MidiKeyboardComponent::updateNoteUnderMouse (Point<float> pos, bool isDown, int fingerNum)
 {
+    if (sustainPressed)
+    {
+        for (int i=0; i < mouseDownNotes.size(); ++i)
+        {
+            if (mouseDownNotes.getUnchecked (i) < 0)
+            {
+                fingerNum = i;
+                break;
+            }
+        }
+    }
+
     float mousePositionVelocity = 0.0f;
     auto newNote = xyToNote (pos, mousePositionVelocity);
     auto oldNote = mouseOverNotes.getUnchecked (fingerNum);
@@ -726,7 +738,7 @@ void MidiKeyboardComponent::updateNoteUnderMouse (Point<float> pos, bool isDown,
     {
         if (newNote != oldNoteDown)
         {
-            if (oldNoteDown >= 0)
+            if (oldNoteDown >= 0 && sustainPressed == false)
             {
                 mouseDownNotes.set (fingerNum, -1);
 
@@ -741,7 +753,7 @@ void MidiKeyboardComponent::updateNoteUnderMouse (Point<float> pos, bool isDown,
             }
         }
     }
-    else if (oldNoteDown >= 0)
+    else if (oldNoteDown >= 0 && sustainPressed == false)
     {
         mouseDownNotes.set (fingerNum, -1);
 
@@ -779,6 +791,9 @@ void MidiKeyboardComponent::mouseDown (const MouseEvent& e)
 
 void MidiKeyboardComponent::mouseUp (const MouseEvent& e)
 {
+    if (sustainPressed)
+        return;
+
     updateNoteUnderMouse (e, false);
 
     float mousePositionVelocity;
@@ -809,6 +824,16 @@ void MidiKeyboardComponent::mouseWheelMove (const MouseEvent&, const MouseWheelD
 
 void MidiKeyboardComponent::timerCallback()
 {
+    if (ModifierKeys::getCurrentModifiers().isShiftDown())
+    {
+        sustainPressed = true;
+    }
+    else if (sustainPressed)
+    {
+        sustainPressed = false;
+        resetAnyKeysInUse();
+    }
+
     if (shouldCheckState)
     {
         shouldCheckState = false;

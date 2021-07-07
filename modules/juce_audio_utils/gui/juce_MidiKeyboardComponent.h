@@ -413,6 +413,7 @@ private:
 
     Array<int> mouseOverNotes, mouseDownNotes;
     BigInteger keysPressed, keysCurrentlyDrawnDown;
+    bool sustainPressed = false;
     bool shouldCheckState = false;
 
     int rangeStart = 0, rangeEnd = 127;
