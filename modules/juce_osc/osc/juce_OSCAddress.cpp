@@ -274,10 +274,17 @@ namespace
             return c >= ' ' && c <= '~';
         }
 
+#pragma warning(push)
+#pragma warning(disable: 4100)
         static bool isDisallowedChar (juce_wchar c) noexcept
         {
+#if JUCE_ALLOW_SPECIAL_CHARS_IN_ADDRESS
+			return false;
+#else
             return CharPointer_ASCII (Traits::getDisallowedChars()).indexOf (c, false) >= 0;
+#endif
         }
+#pragma warning(pop)
 
         static bool containsOnlyAllowedPrintableASCIIChars (const String& string) noexcept
         {
