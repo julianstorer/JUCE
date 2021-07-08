@@ -1652,23 +1652,45 @@ struct JavascriptEngine::RootObject   : public DynamicObject
     //==============================================================================
     struct StringClass  : public DynamicObject
     {
-        StringClass()
-        {
-            setMethod ("substring",     substring);
-            setMethod ("indexOf",       indexOf);
-            setMethod ("charAt",        charAt);
-            setMethod ("charCodeAt",    charCodeAt);
-            setMethod ("fromCharCode",  fromCharCode);
-            setMethod ("split",         split);
-        }
+		StringClass()
+		{
+			setMethod("substring", substring);
+			setMethod("replace", replace);
+			setMethod("replaceCharacters", replaceCharacters);
+			setMethod("trim", trim);
+			setMethod("retainCharacters", retainCharacters);
+			setMethod("startsWith", startsWith);
+			setMethod("endsWith", endsWith);
+			setMethod("indexOf", indexOf);
+			setMethod("charAt", charAt);
+			setMethod("charCodeAt", charCodeAt);
+			setMethod("contains", contains);
+			setMethod("fromCharCode", fromCharCode);
+			setMethod("split", split);
+			setMethod("toLowerCase", toLowerCase);
+			setMethod("toUpperCase", toUpperCase);
+			setMethod("getFloat", getFloatValue);
+			setMethod("getInt", getIntValue);
+		}
 
-        static Identifier getClassName()  { static const Identifier i ("String"); return i; }
+		static Identifier getClassName() { static const Identifier i("String"); return i; }
 
-        static var fromCharCode (Args a)  { return String::charToString (static_cast<juce_wchar> (getInt (a, 0))); }
-        static var substring (Args a)     { return a.thisObject.toString().substring (getInt (a, 0), getInt (a, 1)); }
-        static var indexOf (Args a)       { return a.thisObject.toString().indexOf (getString (a, 0)); }
-        static var charCodeAt (Args a)    { return (int) a.thisObject.toString() [getInt (a, 0)]; }
-        static var charAt (Args a)        { int p = getInt (a, 0); return a.thisObject.toString().substring (p, p + 1); }
+		static var fromCharCode(Args a) { return String::charToString(static_cast<juce_wchar> (getInt(a, 0))); }
+		static var substring(Args a) { return a.thisObject.toString().substring(getInt(a, 0), getInt(a, 1)); }
+		static var replace(Args a) { return a.thisObject.toString().replace(getString(a, 0), getString(a, 1), getInt(a, 2)); }
+		static var replaceCharacters(Args a) { return a.thisObject.toString().replace(getString(a, 0), getString(a, 1)); }
+		static var trim(Args a) { return a.thisObject.toString().trim(); }
+		static var retainCharacters(Args a) { return a.thisObject.toString().retainCharacters(getString(a,0)); }
+		static var contains(Args a) { return a.thisObject.toString().contains(getString(a, 0)); }
+		static var startsWith(Args a) { return a.thisObject.toString().startsWith(getString(a, 0)); }
+		static var endsWith(Args a) { return a.thisObject.toString().endsWith(getString(a, 0)); }
+		static var toLowerCase(Args a) { return a.thisObject.toString().toLowerCase(); }
+		static var toUpperCase(Args a) { return a.thisObject.toString().toUpperCase(); }
+		static var indexOf(Args a) { return a.thisObject.toString().indexOf(getString(a, 0)); }
+		static var charCodeAt(Args a) { return (int)a.thisObject.toString()[getInt(a, 0)]; }
+		static var charAt(Args a) { int p = getInt(a, 0); return a.thisObject.toString().substring(p, p + 1); }
+		static var getFloatValue(Args a) { return a.thisObject.toString().getFloatValue(); }
+		static var getIntValue(Args a) { return a.thisObject.toString().getIntValue(); }
 
         static var split (Args a)
         {
