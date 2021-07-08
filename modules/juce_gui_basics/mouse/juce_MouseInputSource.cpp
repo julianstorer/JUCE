@@ -266,6 +266,20 @@ public:
     {
         if (! isDragging())
             setComponentUnderMouse (findComponentAt (newScreenPos), newScreenPos, time);
+        else if (lastScreenPos == MouseInputSource::offscreenMousePos) {
+          auto componentScreenBounds =
+              ScalingHelpers::scaledScreenPosToUnscaled(
+                  getComponentUnderMouse()
+                      ->getParentMonitorArea()
+                      .reduced(2, 2)
+                      .toFloat());
+            if ( !componentScreenBounds.contains(newScreenPos) ) {
+                // this case means handleUnboundedDrag has been fired, but OS didn't updated new newScreenPos
+                // ignore drags as long as Mouse pos hasn't been updated by OS (X11
+                // is affected...)
+                return;
+            }
+        }
 
         if (newScreenPos != lastScreenPos || forceUpdate)
         {
@@ -456,13 +470,25 @@ public:
 
     void handleUnboundedDrag (Component& current)
     {
+        
         auto componentScreenBounds = ScalingHelpers::scaledScreenPosToUnscaled (current.getParentMonitorArea().reduced (2, 2).toFloat());
 
         if (! componentScreenBounds.contains (lastScreenPos))
         {
+            if(lastScreenPos == MouseInputSource::offscreenMousePos){
+                // OS didn't process last call to setScreenPosition
+                jassertfalse;
+                return;
+            }
             auto componentCentre = current.getScreenBounds().toFloat().getCentre();
+            if(!componentScreenBounds.contains(componentCentre)){
+                // new position will not be in margins, avoid it
+                jassertfalse;
+                return;
+            }
             unboundedMouseOffset += (lastScreenPos - ScalingHelpers::scaledScreenPosToUnscaled (componentCentre));
             setScreenPosition (componentCentre);
+            lastScreenPos = MouseInputSource::offscreenMousePos;
         }
         else if (isCursorVisibleUntilOffscreen
                   && (! unboundedMouseOffset.isOrigin())
@@ -763,7 +789,7 @@ struct MouseInputSource::SourceList  : public Timer
             // because on some OSes the queue can get overloaded with messages so that mouse-events don't get through..
             if (s->isDragging() && ComponentPeer::getCurrentModifiersRealtime().isAnyMouseButtonDown())
             {
-                s->lastScreenPos = s->getRawScreenPosition();
+                s->lastScreenPos = s->getRawScreenPosition() - s->unboundedMouseOffset;
                 s->triggerFakeMove();
                 anyDragging = true;
             }
