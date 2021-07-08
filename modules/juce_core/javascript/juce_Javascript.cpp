@@ -1763,9 +1763,10 @@ struct JavascriptEngine::RootObject   : public DynamicObject
     //==============================================================================
     struct JSONClass  : public DynamicObject
     {
-        JSONClass()                        { setMethod ("stringify", stringify); }
+		JSONClass() { setMethod("stringify", stringify); setMethod("parse", parse);  }
         static Identifier getClassName()   { static const Identifier i ("JSON"); return i; }
-        static var stringify (Args a)      { return JSON::toString (get (a, 0)); }
+		static var stringify(Args a) { return JSON::toString(get(a, 0)); }
+		static var parse (Args a)     { return JSON::fromString (get (a, 0).toString()); }
     };
 
     //==============================================================================
