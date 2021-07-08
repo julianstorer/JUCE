@@ -923,6 +923,29 @@ public:
                                    bool& allowsClicksOnChildComponents) const noexcept;
 
 
+	/** Changes the default behaviour with mouse events
+
+	  Setting this to true disables sending mouseEnter(), mouseExit(), mouseDown(), mouseUp(), mouseDrag()... events.
+	  It is useful when using addMouseListener(this, true) from the same component, to prevent sending mouse event twice.
+
+	  When a component is created, the default setting for this is false.
+
+	  @param value   if true, mouse events will not be passed straight away, only mouseListeners will be called
+
+	  @see hitTest, getDisableDefaultMouseEvents
+  */
+	void setDisableDefaultMouseEvents(bool value) noexcept;
+
+	/** Retrieves the current state of the disableDefaultMouseEvent flag.
+
+		On return, the value is set to the state used in the last call to
+		setDisableDefaultMouseEvents()
+
+		@see setDisableDefaultMouseEvents
+	*/
+	bool getDisableDefaultMouseEvents() const noexcept;
+
+
     /** Returns true if a given point lies within this component or one of its children.
 
         Never override this method! Use hitTest to create custom hit regions.
@@ -934,6 +957,7 @@ public:
                     which might be in the way - for that, see reallyContains()
         @see hitTest, reallyContains, getComponentAt
     */
+
     bool contains (Point<int> localPoint);
 
     /** Returns true if a given point lies in this component, taking any overlapping
@@ -2522,6 +2546,7 @@ private:
        #if JUCE_DEBUG
         bool isInsidePaintCall            : 1;
        #endif
+		bool disableDefaultMouseEvents	: 1;
     };
 
     union
