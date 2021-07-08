@@ -50,9 +50,12 @@ namespace juce
 //==============================================================================
 // Debugging and assertion macros
 
+#define JUCE_LOG_WIDE_STR_EXPRESSION(exp) L ## exp 
+#define JUCE_LOG_WIDE_STR(exp) JUCE_LOG_WIDE_STR_EXPRESSION(exp)
+
 #ifndef JUCE_LOG_CURRENT_ASSERTION
  #if JUCE_LOG_ASSERTIONS || JUCE_DEBUG
-  #define JUCE_LOG_CURRENT_ASSERTION    juce::logAssertion (__FILE__, __LINE__);
+  #define JUCE_LOG_CURRENT_ASSERTION    juce::logAssertion (JUCE_LOG_WIDE_STR(__FILE__), __LINE__);
  #else
   #define JUCE_LOG_CURRENT_ASSERTION
  #endif

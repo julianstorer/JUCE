@@ -217,6 +217,7 @@ namespace juce
 
     extern JUCE_API bool JUCE_CALLTYPE juce_isRunningUnderDebugger() noexcept;
     extern JUCE_API void JUCE_CALLTYPE logAssertion (const char* file, int line) noexcept;
+    extern JUCE_API void JUCE_CALLTYPE logAssertion (const wchar_t* file, int line) noexcept;
 }
 
 #include "memory/juce_Memory.h"

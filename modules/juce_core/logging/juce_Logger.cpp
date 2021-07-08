@@ -57,6 +57,17 @@ void JUCE_API JUCE_CALLTYPE logAssertion (const char* const filename, const int 
     DBG (m);
    #endif
 }
+void JUCE_API JUCE_CALLTYPE logAssertion(const wchar_t* const filename, const int lineNum) noexcept
+{
+	String m("JUCE Assertion failure in ");
+	m << File::createFileWithoutCheckingPath(filename).getFileName() << ':' << lineNum;
+
+#if JUCE_LOG_ASSERTIONS
+	Logger::writeToLog(m);
+#else
+	DBG(m);
+#endif
+}
 #endif
 
 } // namespace juce
