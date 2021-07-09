@@ -845,8 +845,15 @@ public:
         // (need to retain this in case a modal loop runs and our event object gets lost)
         const NSUniquePtr<NSEvent> r ([ev retain]);
 
-        keysCurrentlyDown.clear();
-        handleKeyUpOrDown (true);
+        // Previous behavior clears all the currently held keys before applying the modifier.
+        // But there is only a problem with sticking keys when command modifier key is pressed.
+        // more in-depth explanation: https://forum.juce.com/t/mac-modifier-key-bug-fix-improvement/44476
+        // Proposed: only clear the keysCurrentlyDown when the Command key is pressed
+        if (([ev modifierFlags] & NSEventModifierFlagCommand) != 0)
+        {
+            keysCurrentlyDown.clear();
+            handleKeyUpOrDown (true);
+        }
 
         updateModifiers (ev);
         handleModifierKeysChange();
