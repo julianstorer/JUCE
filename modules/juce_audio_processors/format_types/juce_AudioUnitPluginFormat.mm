@@ -977,8 +977,6 @@ public:
 
             setRateAndBufferSizeDetails ((double) newSampleRate, estimatedSamplesPerBlock);
 
-            updateLatency();
-
             zerostruct (timeStamp);
             timeStamp.mSampleTime = 0;
             timeStamp.mHostTime = GetCurrentHostTime (0, newSampleRate, isAUv3);
@@ -1005,6 +1003,10 @@ public:
                 {
                     prepared = false;
                     AudioUnitUninitialize (audioUnit);
+                }
+                else
+                {
+                    updateLatency();
                 }
             }
         }
