@@ -56,12 +56,13 @@ void AudioFormatManager::registerBasicFormats()
     registerFormat (new WavAudioFormat(), true);
     registerFormat (new AiffAudioFormat(), false);
 
-   #if JUCE_USE_FLAC
-    registerFormat (new FlacAudioFormat(), false);
+   #if JUCE_USE_OGGVORBIS
+    //NB: this has to be added before the FLAC format due to FLAC being able to pick up some OGG files, except only in a half-baked way.
+    registerFormat (new OggVorbisAudioFormat(), false);
    #endif
 
-   #if JUCE_USE_OGGVORBIS
-    registerFormat (new OggVorbisAudioFormat(), false);
+   #if JUCE_USE_FLAC
+    registerFormat (new FlacAudioFormat(), false);
    #endif
 
    #if JUCE_MAC || JUCE_IOS

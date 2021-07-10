@@ -52,6 +52,42 @@
 #endif
 
 //==============================================================================
+#if ! DOXYGEN
+namespace juce
+{
+    inline void setVorbisOrID3MetadataValue (StringPairArray& metadata, StringRef entry)
+    {
+        if (entry.isEmpty())
+            return;
+
+        const auto e = String (entry).trim();
+        if (e.isEmpty())
+            return;
+
+        //NB: all standardised entries are supposed to be formatted as "TAG=TEXT".
+        const auto tag = e.upToFirstOccurrenceOf ("=", false, true).trim();
+        const auto value = e.fromFirstOccurrenceOf ("=", false, true).trim();
+
+        if (VorbisComment::isVorbisComment (tag) || ID3Tags::isID3Tag (tag))
+        {
+            if (value.isNotEmpty())
+            {
+                if (metadata.containsKey (tag))
+                    metadata.set (tag, metadata[tag] + " " + value); //NB: This bit appends the value in the event of duplicate entries being found.
+                else
+                    metadata.set (tag, value);
+            }
+        }
+        else
+        {
+            if (tag != value)
+                metadata.set (tag, value); //Mercifully set the provided tag even if it's an unofficial one.
+        }
+    }
+}
+#endif
+
+//==============================================================================
 #include "format/juce_AudioFormat.cpp"
 #include "format/juce_AudioFormatManager.cpp"
 #include "format/juce_AudioFormatReader.cpp"
@@ -63,6 +99,7 @@
 #include "codecs/juce_AiffAudioFormat.cpp"
 #include "codecs/juce_CoreAudioFormat.cpp"
 #include "codecs/juce_FlacAudioFormat.cpp"
+#include "codecs/juce_ID3Tags.cpp"
 #include "codecs/juce_MP3AudioFormat.cpp"
 #include "codecs/juce_OggVorbisAudioFormat.cpp"
 #include "codecs/juce_WavAudioFormat.cpp"

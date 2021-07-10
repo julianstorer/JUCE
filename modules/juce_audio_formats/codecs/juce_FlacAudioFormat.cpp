@@ -174,8 +174,8 @@ class FlacReader  : public AudioFormatReader
 public:
     FlacReader (InputStream* in)  : AudioFormatReader (in, flacFormatName)
     {
-        lengthInSamples = 0;
         decoder = FlacNamespace::FLAC__stream_decoder_new();
+        FLAC__stream_decoder_set_metadata_respond_all (decoder);
 
         ok = FLAC__stream_decoder_init_stream (decoder,
                                                readCallback_, seekCallback_, tellCallback_, lengthCallback_,
@@ -205,16 +205,6 @@ public:
     ~FlacReader() override
     {
         FlacNamespace::FLAC__stream_decoder_delete (decoder);
-    }
-
-    void useMetadata (const FlacNamespace::FLAC__StreamMetadata_StreamInfo& info)
-    {
-        sampleRate = info.sample_rate;
-        bitsPerSample = info.bits_per_sample;
-        lengthInSamples = (unsigned int) info.total_samples;
-        numChannels = info.channels;
-
-        reservoir.setSize ((int) numChannels, 2 * (int) info.max_blocksize, false, false, true);
     }
 
     // returns the number of samples read
@@ -358,11 +348,13 @@ public:
                                    const FlacNamespace::FLAC__StreamMetadata* metadata,
                                    void* client_data)
     {
-        static_cast<FlacReader*> (client_data)->useMetadata (metadata->data.stream_info);
+        if (metadata != nullptr)
+            static_cast<FlacReader*> (client_data)->setupMetadata (*metadata);
     }
 
     static void errorCallback_ (const FlacNamespace::FLAC__StreamDecoder*, FlacNamespace::FLAC__StreamDecoderErrorStatus, void*)
     {
+        jassertfalse;
     }
 
 private:
@@ -370,6 +362,37 @@ private:
     AudioBuffer<float> reservoir;
     int64 reservoirStart = 0, samplesInReservoir = 0;
     bool ok = false, scanningForLength = false;
+
+    void setupMetadata (const FlacNamespace::FLAC__StreamMetadata& metadata)
+    {
+        switch (metadata.type)
+        {
+            case FlacNamespace::FLAC__METADATA_TYPE_STREAMINFO:
+            {
+                const auto& info = metadata.data.stream_info;
+
+                sampleRate = (double) info.sample_rate;
+                bitsPerSample = info.bits_per_sample;
+                lengthInSamples = (int64) info.total_samples;
+                numChannels = info.channels;
+
+                reservoir.setSize ((int) numChannels, 2 * (int) info.max_blocksize, false, false, true);
+            }
+            break;
+
+            case FlacNamespace::FLAC__METADATA_TYPE_VORBIS_COMMENT:
+            {
+                const auto& c = metadata.data.vorbis_comment;
+
+                for (size_t i = 0; i < (size_t) c.num_comments; ++i)
+                    setVorbisOrID3MetadataValue (metadataValues, (const char*) c.comments[i].entry);
+            }
+            break;
+
+            default:
+            break;
+        };
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlacReader)
 };
@@ -546,13 +569,13 @@ FlacAudioFormat::~FlacAudioFormat() {}
 
 Array<int> FlacAudioFormat::getPossibleSampleRates()
 {
-    return { 8000, 11025, 12000, 16000, 22050, 32000, 44100, 48000,
-             88200, 96000, 176400, 192000, 352800, 384000 };
+    //NB: For more details: https://xiph.org/flac/format.html#frame_header
+    return { 8000, 16000, 22050, 32000, 44100, 48000, 88200, 96000, 176400, 192000 };
 }
 
 Array<int> FlacAudioFormat::getPossibleBitDepths()
 {
-    return { 16, 24 };
+    return { 8, 16, 24 }; //NB: FLAC also supports 12 and 20 but we are omitting them.
 }
 
 bool FlacAudioFormat::canDoStereo()     { return true; }

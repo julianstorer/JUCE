@@ -114,6 +114,8 @@
 #include "format/juce_AudioFormatReader.h"
 #include "format/juce_AudioFormatWriter.h"
 #include "format/juce_MemoryMappedAudioFormatReader.h"
+#include "codecs/juce_VorbisComment.h"
+#include "codecs/juce_ID3Tags.h"
 #include "format/juce_AudioFormat.h"
 #include "format/juce_AudioFormatManager.h"
 #include "format/juce_AudioFormatReaderSource.h"

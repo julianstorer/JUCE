@@ -94,23 +94,12 @@ namespace OggVorbisNamespace
 //==============================================================================
 static const char* const oggFormatName = "Ogg-Vorbis file";
 
-const char* const OggVorbisAudioFormat::encoderName = "encoder";
-const char* const OggVorbisAudioFormat::id3title = "id3title";
-const char* const OggVorbisAudioFormat::id3artist = "id3artist";
-const char* const OggVorbisAudioFormat::id3album = "id3album";
-const char* const OggVorbisAudioFormat::id3comment = "id3comment";
-const char* const OggVorbisAudioFormat::id3date = "id3date";
-const char* const OggVorbisAudioFormat::id3genre = "id3genre";
-const char* const OggVorbisAudioFormat::id3trackNumber = "id3trackNumber";
-
-
 //==============================================================================
 class OggReader : public AudioFormatReader
 {
 public:
     OggReader (InputStream* inp)  : AudioFormatReader (inp, oggFormatName)
     {
-        sampleRate = 0;
         usesFloatingPointData = true;
 
         callbacks.read_func  = &oggReadCallback;
@@ -118,21 +107,14 @@ public:
         callbacks.close_func = &oggCloseCallback;
         callbacks.tell_func  = &oggTellCallback;
 
-        auto err = ov_open_callbacks (input, &ovFile, nullptr, 0, callbacks);
-
-        if (err == 0)
+        if (ov_open_callbacks (input, &ovFile, nullptr, 0, callbacks) == 0)
         {
             auto* info = ov_info (&ovFile, -1);
+            auto* comments = ov_comment (&ovFile, -1);
 
-            auto* comment = ov_comment (&ovFile, -1);
-            addMetadataItem (comment, "ENCODER",     OggVorbisAudioFormat::encoderName);
-            addMetadataItem (comment, "TITLE",       OggVorbisAudioFormat::id3title);
-            addMetadataItem (comment, "ARTIST",      OggVorbisAudioFormat::id3artist);
-            addMetadataItem (comment, "ALBUM",       OggVorbisAudioFormat::id3album);
-            addMetadataItem (comment, "COMMENT",     OggVorbisAudioFormat::id3comment);
-            addMetadataItem (comment, "DATE",        OggVorbisAudioFormat::id3date);
-            addMetadataItem (comment, "GENRE",       OggVorbisAudioFormat::id3genre);
-            addMetadataItem (comment, "TRACKNUMBER", OggVorbisAudioFormat::id3trackNumber);
+            for (int i = 0; i < comments->comments; ++i)
+                if (const auto* comment = comments->user_comments[i])
+                    setVorbisOrID3MetadataValue (metadataValues, comment);
 
             lengthInSamples = (uint32) ov_pcm_total (&ovFile, -1);
             numChannels = (unsigned int) info->channels;
@@ -146,12 +128,6 @@ public:
     ~OggReader() override
     {
         ov_clear (&ovFile);
-    }
-
-    void addMetadataItem (OggVorbisNamespace::vorbis_comment* comment, const char* name, const char* metadataName)
-    {
-        if (auto* value = vorbis_comment_query (comment, name, 0))
-            metadataValues.set (metadataName, value);
     }
 
     //==============================================================================
@@ -282,14 +258,12 @@ public:
         {
             vorbis_comment_init (&vc);
 
-            addMetadata (metadata, OggVorbisAudioFormat::encoderName,    "ENCODER");
-            addMetadata (metadata, OggVorbisAudioFormat::id3title,       "TITLE");
-            addMetadata (metadata, OggVorbisAudioFormat::id3artist,      "ARTIST");
-            addMetadata (metadata, OggVorbisAudioFormat::id3album,       "ALBUM");
-            addMetadata (metadata, OggVorbisAudioFormat::id3comment,     "COMMENT");
-            addMetadata (metadata, OggVorbisAudioFormat::id3date,        "DATE");
-            addMetadata (metadata, OggVorbisAudioFormat::id3genre,       "GENRE");
-            addMetadata (metadata, OggVorbisAudioFormat::id3trackNumber, "TRACKNUMBER");
+            addMetadata (metadata, VorbisComment::getAll());
+            addMetadata (metadata, ID3Tags::getV1());
+            addMetadata (metadata, ID3Tags::getV1Enhanced());
+            addMetadata (metadata, ID3Tags::getV2dot2());
+            addMetadata (metadata, ID3Tags::getV2dot3());
+            addMetadata (metadata, ID3Tags::getV2dot4());
 
             vorbis_analysis_init (&vd, &vi);
             vorbis_block_init (&vd, &vb);
@@ -407,12 +381,18 @@ private:
     OggVorbisNamespace::vorbis_dsp_state vd;
     OggVorbisNamespace::vorbis_block vb;
 
-    void addMetadata (const StringPairArray& metadata, const char* name, const char* vorbisName)
+    void addMetadata (const StringPairArray& metadata, const String& name)
     {
-        auto s = metadata [name];
+        auto s = metadata [name].trim();
 
         if (s.isNotEmpty())
-            vorbis_comment_add_tag (&vc, vorbisName, const_cast<char*> (s.toRawUTF8()));
+            vorbis_comment_add_tag (&vc, name.toRawUTF8(), s.toRawUTF8());
+    }
+
+    void addMetadata (const StringPairArray& metadata, const StringArray& tags)
+    {
+        for (const auto& tagName : tags)
+            addMetadata (metadata, tagName);
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OggWriter)
