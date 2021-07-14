@@ -328,6 +328,10 @@ TextEditor* Label::createEditorComponent()
     copyColourIfSpecified (*this, *ed, textWhenEditingColourId, TextEditor::textColourId);
     copyColourIfSpecified (*this, *ed, backgroundWhenEditingColourId, TextEditor::backgroundColourId);
     copyColourIfSpecified (*this, *ed, outlineWhenEditingColourId, TextEditor::focusedOutlineColourId);
+    copyColourIfSpecified (*this, *ed, highlightWhenEditingColourId, TextEditor::highlightColourId);
+    copyColourIfSpecified (*this, *ed, highlightTextWhenEditingColourId, TextEditor::highlightedTextColourId);
+    copyColourIfSpecified (*this, *ed, focusedOutlineWhenEditingColourId, TextEditor::focusedOutlineColourId);
+    copyColourIfSpecified (*this, *ed, shadowColourIdWhenEditingColourId, TextEditor::shadowColourId);
 
     return ed;
 }
