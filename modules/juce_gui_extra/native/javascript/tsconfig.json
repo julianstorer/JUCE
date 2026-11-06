@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "noEmit": true,
+    "allowJs": true,
+    "skipLibCheck": true
+  }
+}
