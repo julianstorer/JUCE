@@ -64,7 +64,7 @@ public:
     explicit Viewport (const String& componentName = String());
 
     /** Destructor. */
-    ~Viewport() override;
+    virtual ~Viewport() override;
 
     //==============================================================================
     /** Sets the component that this viewport will contain and scroll around.
@@ -82,14 +82,14 @@ public:
                                     of the component
         @see getViewedComponent
     */
-    void setViewedComponent (Component* newViewedComponent,
+    virtual void setViewedComponent (Component* newViewedComponent,
                              bool deleteComponentWhenNoLongerNeeded = true);
 
     /** Returns the component that's currently being used inside the Viewport.
 
         @see setViewedComponent
     */
-    Component* getViewedComponent() const noexcept                  { return contentComp.get(); }
+    virtual Component* getViewedComponent() const noexcept                  { return contentComp.get(); }
 
     //==============================================================================
     /** Changes the position of the viewed component.
@@ -102,7 +102,7 @@ public:
 
         @see getViewPositionX, getViewPositionY, setViewPositionProportionately
     */
-    void setViewPosition (int xPixelsOffset, int yPixelsOffset);
+    virtual void setViewPosition (int xPixelsOffset, int yPixelsOffset);
 
     /** Changes the position of the viewed component.
 
@@ -114,7 +114,7 @@ public:
 
         @see getViewPositionX, getViewPositionY, setViewPositionProportionately
     */
-    void setViewPosition (Point<int> newPosition);
+    virtual void setViewPosition (Point<int> newPosition);
 
     /** Changes the view position as a proportion of the distance it can move.
 
@@ -123,7 +123,7 @@ public:
         to the right as it's possible to go whilst keeping the child component
         on-screen.
     */
-    void setViewPositionProportionately (double proportionX, double proportionY);
+    virtual void setViewPositionProportionately (double proportionX, double proportionY);
 
     /** If the specified position is at the edges of the viewport, this method scrolls
         the viewport to bring that position nearer to the centre.
@@ -140,51 +140,51 @@ public:
                             to scroll by.
         @returns            true if the viewport was scrolled
     */
-    bool autoScroll (int mouseX, int mouseY, int distanceFromEdge, int maximumSpeed);
+    virtual bool autoScroll (int mouseX, int mouseY, int distanceFromEdge, int maximumSpeed);
 
     /** Returns the position within the child component of the top-left of its visible area. */
-    Point<int> getViewPosition() const noexcept             { return lastVisibleArea.getPosition(); }
+    virtual Point<int> getViewPosition() const noexcept             { return lastVisibleArea.getPosition(); }
 
     /** Returns the visible area of the child component, relative to its top-left */
-    Rectangle<int> getViewArea() const noexcept             { return lastVisibleArea; }
+    virtual Rectangle<int> getViewArea() const noexcept             { return lastVisibleArea; }
 
     /** Returns the position within the child component of the top-left of its visible area.
         @see getViewWidth, setViewPosition
     */
-    int getViewPositionX() const noexcept                   { return lastVisibleArea.getX(); }
+    virtual int getViewPositionX() const noexcept                   { return lastVisibleArea.getX(); }
 
     /** Returns the position within the child component of the top-left of its visible area.
         @see getViewHeight, setViewPosition
     */
-    int getViewPositionY() const noexcept                   { return lastVisibleArea.getY(); }
+    virtual int getViewPositionY() const noexcept                   { return lastVisibleArea.getY(); }
 
     /** Returns the width of the visible area of the child component.
 
         This may be less than the width of this Viewport if there's a vertical scrollbar
         or if the child component is itself smaller.
     */
-    int getViewWidth() const noexcept                       { return lastVisibleArea.getWidth(); }
+    virtual int getViewWidth() const noexcept                       { return lastVisibleArea.getWidth(); }
 
     /** Returns the height of the visible area of the child component.
 
         This may be less than the height of this Viewport if there's a horizontal scrollbar
         or if the child component is itself smaller.
     */
-    int getViewHeight() const noexcept                      { return lastVisibleArea.getHeight(); }
+    virtual int getViewHeight() const noexcept                      { return lastVisibleArea.getHeight(); }
 
     /** Returns the width available within this component for the contents.
 
         This will be the width of the viewport component minus the width of a
         vertical scrollbar (if visible).
     */
-    int getMaximumVisibleWidth() const;
+    virtual int getMaximumVisibleWidth() const;
 
     /** Returns the height available within this component for the contents.
 
         This will be the height of the viewport component minus the space taken up
         by a horizontal scrollbar (if visible).
     */
-    int getMaximumVisibleHeight() const;
+    virtual int getMaximumVisibleHeight() const;
 
     //==============================================================================
     /** Callback method that is called when the visible area changes.
@@ -207,7 +207,7 @@ public:
         mouse-wheel scrolling even when there the scrollbars are hidden. When the
         scrollbars are visible, these parameters are ignored.
     */
-    void setScrollBarsShown (bool showVerticalScrollbarIfNeeded,
+    virtual void setScrollBarsShown (bool showVerticalScrollbarIfNeeded,
                              bool showHorizontalScrollbarIfNeeded,
                              bool allowVerticalScrollingWithoutScrollbar = false,
                              bool allowHorizontalScrollingWithoutScrollbar = false);
@@ -222,63 +222,63 @@ public:
         will appear at the bottom of the view port's content (this is the default),
         otherwise it will be at the top.
     */
-    void setScrollBarPosition (bool verticalScrollbarOnRight,
+    virtual void setScrollBarPosition (bool verticalScrollbarOnRight,
                                bool horizontalScrollbarAtBottom);
 
     /** True if the vertical scrollbar will appear on the right side of the content */
-    bool isVerticalScrollbarOnTheRight() const noexcept         { return vScrollbarRight; }
+    virtual bool isVerticalScrollbarOnTheRight() const noexcept         { return vScrollbarRight; }
 
     /** True if the horizontal scrollbar will appear at the bottom of the content */
-    bool isHorizontalScrollbarAtBottom() const noexcept         { return hScrollbarBottom; }
+    virtual bool isHorizontalScrollbarAtBottom() const noexcept         { return hScrollbarBottom; }
 
     /** True if the vertical scrollbar is enabled.
         @see setScrollBarsShown
     */
-    bool isVerticalScrollBarShown() const noexcept              { return showVScrollbar; }
+    virtual bool isVerticalScrollBarShown() const noexcept              { return showVScrollbar; }
 
     /** True if the horizontal scrollbar is enabled.
         @see setScrollBarsShown
     */
-    bool isHorizontalScrollBarShown() const noexcept            { return showHScrollbar; }
+    virtual bool isHorizontalScrollBarShown() const noexcept            { return showHScrollbar; }
 
     /** Changes the width of the scrollbars.
         If this isn't specified, the default width from the LookAndFeel class will be used.
         @see LookAndFeel::getDefaultScrollbarWidth
     */
-    void setScrollBarThickness (int thickness);
+    virtual void setScrollBarThickness (int thickness);
 
     /** Returns the thickness of the scrollbars.
         @see setScrollBarThickness
     */
-    int getScrollBarThickness() const;
+    virtual int getScrollBarThickness() const;
 
     /** Changes the distance that a single-step click on a scrollbar button
         will move the viewport.
     */
-    void setSingleStepSizes (int stepX, int stepY);
+    virtual void setSingleStepSizes (int stepX, int stepY);
 
     /** Returns a reference to the scrollbar component being used.
         Handy if you need to customise the bar somehow.
     */
-    ScrollBar& getVerticalScrollBar() noexcept                  { return *verticalScrollBar; }
+    virtual ScrollBar& getVerticalScrollBar() noexcept                  { return *verticalScrollBar; }
 
     /** Returns a reference to the scrollbar component being used.
         Handy if you need to customise the bar somehow.
     */
-    ScrollBar& getHorizontalScrollBar() noexcept                { return *horizontalScrollBar; }
+    virtual ScrollBar& getHorizontalScrollBar() noexcept                { return *horizontalScrollBar; }
 
     /** Re-instantiates the scrollbars, which is only really useful if you've overridden createScrollBarComponent(). */
-    void recreateScrollbars();
+    virtual void recreateScrollbars();
 
     /** True if there's any off-screen content that could be scrolled vertically,
         or false if everything is currently visible.
     */
-    bool canScrollVertically() const noexcept;
+    virtual bool canScrollVertically() const noexcept;
 
     /** True if there's any off-screen content that could be scrolled horizontally,
         or false if everything is currently visible.
     */
-    bool canScrollHorizontally() const noexcept;
+    virtual bool canScrollHorizontally() const noexcept;
 
     /** Enables or disables drag-to-scroll functionality for mouse sources in the viewport.
 
@@ -287,14 +287,14 @@ public:
         method.
     */
     [[deprecated ("Use setScrollOnDragMode instead.")]]
-    void setScrollOnDragEnabled (bool shouldScrollOnDrag)
+    virtual void setScrollOnDragEnabled (bool shouldScrollOnDrag)
     {
         setScrollOnDragMode (shouldScrollOnDrag ? ScrollOnDragMode::all : ScrollOnDragMode::never);
     }
 
     /** Returns true if drag-to-scroll functionality is enabled for mouse input sources. */
     [[deprecated ("Use getScrollOnDragMode instead.")]]
-    bool isScrollOnDragEnabled() const noexcept { return getScrollOnDragMode() == ScrollOnDragMode::all; }
+    virtual bool isScrollOnDragEnabled() const noexcept { return getScrollOnDragMode() == ScrollOnDragMode::all; }
 
     enum class ScrollOnDragMode
     {
@@ -309,33 +309,33 @@ public:
         user is drag-scrolling, you can disable this with the Component::setViewportIgnoreDragFlag()
         method.
     */
-    void setScrollOnDragMode (ScrollOnDragMode scrollOnDragMode);
+    virtual void setScrollOnDragMode (ScrollOnDragMode scrollOnDragMode);
 
     /** Returns the current scroll-on-drag mode. */
-    ScrollOnDragMode getScrollOnDragMode() const { return scrollOnDragMode; }
+    virtual ScrollOnDragMode getScrollOnDragMode() const { return scrollOnDragMode; }
 
     /** Returns true if the user is currently dragging-to-scroll.
         @see setScrollOnDragEnabled
     */
-    bool isCurrentlyScrollingOnDrag() const noexcept;
+    virtual bool isCurrentlyScrollingOnDrag() const noexcept;
 
     //==============================================================================
     /** @internal */
-    void resized() override;
+    virtual void resized() override;
     /** @internal */
-    void scrollBarMoved (ScrollBar*, double newRangeStart) override;
+    virtual void scrollBarMoved (ScrollBar*, double newRangeStart) override;
     /** @internal */
-    void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override;
+    virtual void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override;
     /** @internal */
-    void mouseDown (const MouseEvent& e) override;
+    virtual void mouseDown (const MouseEvent& e) override;
     /** @internal */
-    bool keyPressed (const KeyPress&) override;
+    virtual bool keyPressed (const KeyPress&) override;
     /** @internal */
-    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
+    virtual void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
     /** @internal */
-    void lookAndFeelChanged() override;
+    virtual void lookAndFeelChanged() override;
     /** @internal */
-    bool useMouseWheelMoveIfNeeded (const MouseEvent&, const MouseWheelDetails&);
+    virtual bool useMouseWheelMoveIfNeeded (const MouseEvent&, const MouseWheelDetails&);
     /** @internal */
     static bool respondsToKey (const KeyPress&);
 
