@@ -36,10 +36,15 @@ namespace juce
 {
 
 OSCArgument::OSCArgument (int32 v)              : type (OSCTypes::int32),   intValue (v) {}
+OSCArgument::OSCArgument (int64 v)              : type (OSCTypes::int64),   int64Value (v) {}
 OSCArgument::OSCArgument (float v)              : type (OSCTypes::float32), floatValue (v) {}
+OSCArgument::OSCArgument (double v)             : type (OSCTypes::double64),doubleValue (v) {}
 OSCArgument::OSCArgument (const String& s)      : type (OSCTypes::string),  stringValue (s) {}
 OSCArgument::OSCArgument (MemoryBlock b)        : type (OSCTypes::blob),    blob (std::move (b)) {}
 OSCArgument::OSCArgument (OSCColour c)          : type (OSCTypes::colour),  intValue ((int32) c.toInt32()) {}
+OSCArgument::OSCArgument (bool b)               : type (b ? OSCTypes::T : OSCTypes::F) {}
+OSCArgument::OSCArgument (OSCType t)            : type (t) {} //for nil and impulse
+
 
 //==============================================================================
 String OSCArgument::getString() const noexcept
@@ -60,6 +65,15 @@ int32 OSCArgument::getInt32() const noexcept
     return 0;
 }
 
+int64 OSCArgument::getInt64() const noexcept
+{
+	if (isInt64())
+		return int64Value;
+
+	jassertfalse; // you must check the type of an argument before attempting to get its value!
+	return 0;
+}
+
 float OSCArgument::getFloat32() const noexcept
 {
     if (isFloat32())
@@ -67,6 +81,15 @@ float OSCArgument::getFloat32() const noexcept
 
     jassertfalse; // you must check the type of an argument before attempting to get its value!
     return 0.0f;
+}
+
+double OSCArgument::getDouble() const noexcept
+{
+	if (isDouble())
+		return doubleValue;
+
+	jassertfalse; // you must check the type of an argument before attempting to get its value!
+	return 0.0;
 }
 
 const MemoryBlock& OSCArgument::getBlob() const noexcept
@@ -84,6 +107,15 @@ OSCColour OSCArgument::getColour() const noexcept
 
     jassertfalse; // you must check the type of an argument before attempting to get its value!
     return { 0, 0, 0, 0 };
+}
+
+bool OSCArgument::getBool() const noexcept
+{
+	if (isBool())
+		return type == OSCTypes::T;
+
+	jassertfalse; // you must check the type of an argument before attempting to get its value!
+	return false;
 }
 
 
@@ -126,12 +158,38 @@ public:
 
             expect (arg.getType() == OSCTypes::int32);
             expect (arg.isInt32());
+            expect (! arg.isInt64());
             expect (! arg.isFloat32());
+            expect (! arg.isDouble());
             expect (! arg.isString());
             expect (! arg.isBlob());
             expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
 
             expect (arg.getInt32() == value);
+        }
+
+        beginTest("Int64");
+        {
+            int64 value = 1234567890123456789;
+
+            OSCArgument arg(value);
+
+            expect(arg.getType() == OSCTypes::int64);
+            expect (! arg.isInt32());
+            expect (arg.isInt64());
+            expect (! arg.isFloat32());
+            expect (! arg.isDouble());
+            expect (! arg.isString());
+            expect (! arg.isBlob());
+            expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
+
+            expect(arg.getInt64() == value);
         }
 
         beginTest ("Float32");
@@ -142,13 +200,39 @@ public:
 
             expect (arg.getType() == OSCTypes::float32);
             expect (! arg.isInt32());
+            expect (! arg.isInt64());
             expect (arg.isFloat32());
+            expect (! arg.isDouble());
             expect (! arg.isString());
             expect (! arg.isBlob());
             expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
 
             expectEquals (arg.getFloat32(), value);
         }
+
+        beginTest("Double");
+		{
+			double value = 12345.6789;
+
+			OSCArgument arg(value);
+
+			expect(arg.getType() == OSCTypes::double64);
+            expect (! arg.isInt32());
+            expect (! arg.isInt64());
+            expect (! arg.isFloat32());
+            expect (arg.isDouble());
+            expect (! arg.isString());
+            expect (! arg.isBlob());
+            expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
+
+			expectEquals(arg.getDouble(), value);
+		}
 
         beginTest ("String");
         {
@@ -157,10 +241,15 @@ public:
 
             expect (arg.getType() == OSCTypes::string);
             expect (! arg.isInt32());
+            expect (! arg.isInt64());
             expect (! arg.isFloat32());
+            expect (! arg.isDouble());
             expect (arg.isString());
             expect (! arg.isBlob());
             expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
 
             expect (arg.getString() == value);
         }
@@ -171,10 +260,15 @@ public:
 
             expect (arg.getType() == OSCTypes::string);
             expect (! arg.isInt32());
+            expect (! arg.isInt64());
             expect (! arg.isFloat32());
+            expect (! arg.isDouble());
             expect (arg.isString());
             expect (! arg.isBlob());
             expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
 
             expect (arg.getString() == "Hello, World!");
         }
@@ -186,10 +280,15 @@ public:
 
             expect (arg.getType() == OSCTypes::blob);
             expect (! arg.isInt32());
+            expect (! arg.isInt64());
             expect (! arg.isFloat32());
+            expect (! arg.isDouble());
             expect (! arg.isString());
             expect (arg.isBlob());
             expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
 
             expect (arg.getBlob() == blob);
         }
@@ -209,14 +308,84 @@ public:
 
                 expect (arg.getType() == OSCTypes::colour);
                 expect (! arg.isInt32());
+                expect (! arg.isInt64());
                 expect (! arg.isFloat32());
+                expect (! arg.isDouble());
                 expect (! arg.isString());
                 expect (! arg.isBlob());
                 expect (arg.isColour());
+                expect (! arg.isNil());
+                expect (! arg.isImpulse());
+                expect (! arg.isBool());
 
                 expect (arg.getColour().toInt32() == col.toInt32());
             }
         }
+
+        beginTest ("Nil");
+		{
+			OSCArgument arg (OSCTypes::nil);
+
+			expect (arg.getType() == OSCTypes::nil);
+            expect (! arg.isInt32());
+            expect (! arg.isInt64());
+            expect (! arg.isFloat32());
+            expect (! arg.isDouble());
+            expect (! arg.isString());
+            expect (! arg.isBlob());
+            expect (! arg.isColour());
+            expect (arg.isNil());
+            expect (! arg.isImpulse());
+            expect (! arg.isBool());
+		}
+
+        beginTest("Impulse");
+        {
+            OSCArgument arg(OSCTypes::impulse);
+
+			expect(arg.getType() == OSCTypes::impulse);
+            expect (! arg.isInt32());
+            expect (! arg.isInt64());
+            expect (! arg.isFloat32());
+            expect (! arg.isDouble());
+            expect (! arg.isString());
+            expect (! arg.isBlob());
+            expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (arg.isImpulse());
+            expect (! arg.isBool());
+		}
+
+        beginTest("True");
+        {
+            OSCArgument arg(OSCTypes::T);
+            expect (! arg.isInt32());
+            expect (! arg.isInt64());
+            expect (! arg.isFloat32());
+            expect (! arg.isDouble());
+            expect (! arg.isString());
+            expect (! arg.isBlob());
+            expect (! arg.isColour());
+            expect (! arg.isNil());
+            expect (! arg.isImpulse());
+            expect (arg.isBool());
+        }
+
+        beginTest("False");
+		{
+			OSCArgument arg(OSCTypes::F);
+			expect (! arg.isInt32());
+			expect (! arg.isInt64());
+			expect (! arg.isFloat32());
+			expect (! arg.isDouble());
+			expect (! arg.isString());
+			expect (! arg.isBlob());
+			expect (! arg.isColour());
+			expect (! arg.isNil());
+			expect (! arg.isImpulse());
+			expect (arg.isBool());
+		}
+
 
         beginTest ("Copy, move and assignment");
         {

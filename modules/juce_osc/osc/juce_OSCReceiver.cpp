@@ -86,6 +86,12 @@ namespace
             return input.readIntBigEndian();
         }
 
+        int64 readInt64()
+        {
+            checkBytesAvailable(8, "OSC input stream exhausted while reading int64");
+            return input.readInt64BigEndian();
+        }
+
         uint64 readUint64()
         {
             checkBytesAvailable (8, "OSC input stream exhausted while reading uint64");
@@ -96,6 +102,12 @@ namespace
         {
             checkBytesAvailable (4, "OSC input stream exhausted while reading float");
             return input.readFloatBigEndian();
+        }
+
+        double readDouble64()
+        {
+            checkBytesAvailable(8, "OSC input stream exhausted while reading double");
+            return input.readDoubleBigEndian();
         }
 
         String readString()
@@ -189,10 +201,16 @@ namespace
             switch (type)
             {
                 case OSCTypes::int32:       return OSCArgument (readInt32());
+                case OSCTypes::int64:       return OSCArgument (readInt64());
                 case OSCTypes::float32:     return OSCArgument (readFloat32());
+                case OSCTypes::double64:    return OSCArgument (readDouble64());
                 case OSCTypes::string:      return OSCArgument (readString());
                 case OSCTypes::blob:        return OSCArgument (readBlob());
                 case OSCTypes::colour:      return OSCArgument (readColour());
+                case OSCTypes::nil:         return OSCArgument (OSCTypes::nil);
+                case OSCTypes::impulse:     return OSCArgument (OSCTypes::impulse);
+                case OSCTypes::T:           return OSCArgument (true);
+                case OSCTypes::F:           return OSCArgument (false);
 
                 default:
                     // You supplied an invalid OSCType when calling readArgument! This should never happen.

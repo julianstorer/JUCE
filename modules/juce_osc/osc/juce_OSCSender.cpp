@@ -62,6 +62,11 @@ namespace
             return output.writeIntBigEndian (value);
         }
 
+        bool writeInt64(int64 value)
+        {
+            return output.writeInt64BigEndian(value);
+        }
+
         bool writeUint64 (uint64 value)
         {
             return output.writeInt64BigEndian (int64 (value));
@@ -70,6 +75,11 @@ namespace
         bool writeFloat32 (float value)
         {
             return output.writeFloatBigEndian (value);
+        }
+
+        bool writeDouble(double value)
+        {
+            return output.writeDoubleBigEndian(value);
         }
 
         bool writeString (const String& value)
@@ -133,10 +143,16 @@ namespace
             switch (arg.getType())
             {
                 case OSCTypes::int32:       return writeInt32 (arg.getInt32());
+                case OSCTypes::int64:       return writeInt64 (arg.getInt64());
                 case OSCTypes::float32:     return writeFloat32 (arg.getFloat32());
+                case OSCTypes::double64:    return writeDouble (arg.getDouble());
                 case OSCTypes::string:      return writeString (arg.getString());
                 case OSCTypes::blob:        return writeBlob (arg.getBlob());
                 case OSCTypes::colour:      return writeColour (arg.getColour());
+                case OSCTypes::nil:         return true;
+                case OSCTypes::impulse:     return true;
+                case OSCTypes::T:           return true;
+                case OSCTypes::F:           return true;
 
                 default:
                     // In this very unlikely case you supplied an invalid OSCType!

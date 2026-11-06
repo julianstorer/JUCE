@@ -133,10 +133,20 @@ public:
     */
     void addInt32 (int32 value);
 
+    /** Creates a new OSCArgument of type int64 with the given value,
+		and adds it to the OSCMessage object.
+	*/
+    void addInt64(int64 value);
+
     /** Creates a new OSCArgument of type float32 with the given value,
         and adds it to the OSCMessage object.
     */
     void addFloat32 (float value);
+
+    /** Creates a new OSCArgument of type double with the given value,
+        and adds it to the OSCMessage object.
+    */
+    void addDouble (double value);
 
     /** Creates a new OSCArgument of type string with the given value,
         and adds it to the OSCMessage object.
@@ -154,6 +164,17 @@ public:
         and adds it to the OSCMessage object.
     */
     void addColour (OSCColour colour);
+
+    /** Creates a new OSCArgument of type nil and adds it to the OSCMessage object. */
+    void addNil();
+
+    /** Creates a new OSCArgument of type impulse and adds it to the OSCMessage object. */
+    void addImpulse();
+
+    /** Creates a new OSCArgument of type T or F with the given value,
+		and adds it to the OSCMessage object.
+	*/
+    void addBool (bool value);
 
     /** Adds the OSCArgument argument to the OSCMessage object.
 

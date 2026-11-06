@@ -56,18 +56,30 @@ class JUCE_API  OSCTypes
 {
 public:
     static const OSCType int32;
+    static const OSCType int64;
     static const OSCType float32;
+    static const OSCType double64;
     static const OSCType string;
     static const OSCType blob;
     static const OSCType colour;
+    static const OSCType nil;
+    static const OSCType impulse;
+    static const OSCType T;
+    static const OSCType F;
 
     static bool isSupportedType (OSCType type) noexcept
     {
         return type == OSCTypes::int32
+            || type == OSCTypes::int64
             || type == OSCTypes::float32
+            || type == OSCTypes::double64
             || type == OSCTypes::string
             || type == OSCTypes::blob
-            || type == OSCTypes::colour;
+            || type == OSCTypes::colour
+            || type == OSCTypes::nil
+            || type == OSCTypes::impulse
+            || type == OSCTypes::T
+            || type == OSCTypes::F;
     }
 };
 

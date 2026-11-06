@@ -98,10 +98,15 @@ void OSCMessage::clear()
 
 //==============================================================================
 void OSCMessage::addInt32 (int32 value)             { arguments.add (OSCArgument (value)); }
+void OSCMessage::addInt64 (int64 value)             { arguments.add (OSCArgument (value)); }
 void OSCMessage::addFloat32 (float value)           { arguments.add (OSCArgument (value)); }
+void OSCMessage::addDouble (double value)           { arguments.add (OSCArgument (value)); }
 void OSCMessage::addString (const String& value)    { arguments.add (OSCArgument (value)); }
 void OSCMessage::addBlob (MemoryBlock blob)         { arguments.add (OSCArgument (std::move (blob))); }
 void OSCMessage::addColour (OSCColour colour)       { arguments.add (OSCArgument (colour)); }
+void OSCMessage::addNil()                           { arguments.add (OSCArgument (OSCTypes::nil)); }
+void OSCMessage::addImpulse()                       { arguments.add (OSCArgument (OSCTypes::impulse)); }
+void OSCMessage::addBool (bool value)               { arguments.add (OSCArgument (value)); }
 void OSCMessage::addArgument (OSCArgument arg)      { arguments.add (arg); }
 
 
@@ -124,41 +129,72 @@ public:
             expectEquals (msg.size(), 0);
             expect (msg.getAddressPattern().toString() == "/test/param0");
 
-            const int numTestArgs = 5;
+            const int numTestArgs = 11;
 
             const int testInt = 42;
+            const int64 testInt64 = 64;
             const float testFloat = 3.14159f;
+            const double testDouble = 6.28;
             const String testString = "Hello, World!";
             const OSCColour testColour = { 10, 20, 150, 200 };
+            const bool testTrue = true;
+            const bool testFalse = false;
 
             const uint8 testBlobData[5] = { 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
             const MemoryBlock testBlob (testBlobData,  sizeof (testBlobData));
 
             msg.addInt32 (testInt);
+            msg.addInt64 (testInt64);
             msg.addFloat32 (testFloat);
+            msg.addDouble (testDouble);
             msg.addString (testString);
             msg.addBlob (testBlob);
             msg.addColour (testColour);
+            msg.addNil ();
+            msg.addImpulse ();
+            msg.addBool (testTrue);
+            msg.addBool (testFalse);
+
 
             expectEquals (msg.size(), numTestArgs);
 
             expectEquals (msg[0].getType(), OSCTypes::int32);
-            expectEquals (msg[1].getType(), OSCTypes::float32);
-            expectEquals (msg[2].getType(), OSCTypes::string);
-            expectEquals (msg[3].getType(), OSCTypes::blob);
-            expectEquals (msg[4].getType(), OSCTypes::colour);
+            expectEquals (msg[1].getType(), OSCTypes::int64);
+            expectEquals (msg[2].getType(), OSCTypes::float32);
+            expectEquals (msg[3].getType(), OSCTypes::double64);
+            expectEquals (msg[4].getType(), OSCTypes::string);
+            expectEquals (msg[5].getType(), OSCTypes::blob);
+            expectEquals (msg[6].getType(), OSCTypes::colour);
+            expectEquals (msg[7].getType(), OSCTypes::nil);
+            expectEquals (msg[8].getType(), OSCTypes::impulse);
+            expectEquals (msg[9].getType(), OSCTypes::T);
+            expectEquals (msg[10].getType(), OSCTypes::F);
+
 
             expect (msg[0].isInt32());
-            expect (msg[1].isFloat32());
-            expect (msg[2].isString());
-            expect (msg[3].isBlob());
-            expect (msg[4].isColour());
+            expect (msg[1].isInt64());
+            expect (msg[2].isFloat32());
+            expect (msg[3].isDouble());
+            expect (msg[4].isString());
+            expect (msg[5].isBlob());
+            expect (msg[6].isColour());
+            expect (msg[7].isNil());
+            expect (msg[8].isImpulse());
+            expect (msg[9].isBool());
+            expect (msg[10].isBool());
+
 
             expectEquals (msg[0].getInt32(), testInt);
-            expectEquals (msg[1].getFloat32(), testFloat);
-            expectEquals (msg[2].getString(), testString);
-            expect (msg[3].getBlob() == testBlob);
-            expect (msg[4].getColour().toInt32() == testColour.toInt32());
+            expectEquals (msg[1].getInt64(), testInt64);
+            expectEquals (msg[2].getFloat32(), testFloat);
+            expectEquals (msg[3].getDouble(), testDouble);
+            expectEquals (msg[4].getString(), testString);
+            expect (msg[5].getBlob() == testBlob);
+            expect (msg[6].getColour().toInt32() == testColour.toInt32());
+            expectEquals (msg[9].getBool(), testTrue);
+			expectEquals (msg[10].getBool(), testFalse);
+
+
 
             expect (msg.begin() + numTestArgs == msg.end());
 
@@ -166,8 +202,14 @@ public:
             expect (arg->isInt32());
             expectEquals (arg->getInt32(), testInt);
             ++arg;
+            expect (arg->isInt64());
+            expectEquals (arg->getInt64(), testInt64);
+            ++arg;
             expect (arg->isFloat32());
             expectEquals (arg->getFloat32(), testFloat);
+            ++arg;
+            expect (arg->isDouble());
+            expectEquals (arg->getDouble(), testDouble);
             ++arg;
             expect (arg->isString());
             expectEquals (arg->getString(), testString);
@@ -178,6 +220,17 @@ public:
             expect (arg->isColour());
             expect (arg->getColour().toInt32() == testColour.toInt32());
             ++arg;
+            expect (arg->isNil());
+            ++arg;
+            expect(arg->isImpulse());
+            ++arg;
+            expect(arg->isBool());
+            expectEquals(arg->getBool(), testTrue);
+            ++arg;
+            expect(arg->isBool());
+            expectEquals(arg->getBool(), testFalse);
+            ++arg;
+
             expect (arg == msg.end());
         }
 

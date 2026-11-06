@@ -36,10 +36,16 @@ namespace juce
 {
 
 const OSCType OSCTypes::int32   = 'i';
+const OSCType OSCTypes::int64   = 'h';
 const OSCType OSCTypes::float32 = 'f';
+const OSCType OSCTypes::double64= 'd';
 const OSCType OSCTypes::string  = 's';
 const OSCType OSCTypes::blob    = 'b';
 const OSCType OSCTypes::colour  = 'r';
+const OSCType OSCTypes::nil     = 'N';
+const OSCType OSCTypes::impulse = 'I';
+const OSCType OSCTypes::T       = 'T';
+const OSCType OSCTypes::F       = 'F';
 
 uint32 OSCColour::toInt32() const
 {
