@@ -70,7 +70,11 @@
 #elif defined(__ppc__) || defined(__ppc) || defined(__powerpc__) || defined(_ARCH_COM) || defined(_ARCH_PWR) || defined(_ARCH_PPC) || defined(_M_MPPC) || defined(_M_PPC)
 
   #if defined(__ppc64__) || defined(__powerpc64__) || defined(__64BIT__)
-    #error JUCE_ARCH ppc64
+    #ifdef __LITTLE_ENDIAN__
+      #error JUCE_ARCH ppc64le
+    #else
+      #error JUCE_ARCH ppc64
+    #endif
   #else
     #error JUCE_ARCH ppc
   #endif
