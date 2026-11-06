@@ -120,7 +120,11 @@ public:
                                                          Leave this transparent to not have an outline. */
         backgroundWhenEditingColourId  = 0x1000283, /**< The background colour when the label is being edited. */
         textWhenEditingColourId        = 0x1000284, /**< The colour for the text when the label is being edited. */
-        outlineWhenEditingColourId     = 0x1000285  /**< An optional border colour when the label is being edited. */
+        outlineWhenEditingColourId     = 0x1000285,  /**< An optional border colour when the label is being edited. */
+        highlightWhenEditingColourId      = 0x1000286, /**< The highlight colour when the label is being edited. */
+        highlightTextWhenEditingColourId  = 0x1000287, /**<  The highlighted text colour when the label is being edited. */
+        focusedOutlineWhenEditingColourId = 0x1000288, /**< Colour for drawing a box around the edge of the component when it has focus when the label is being edited. */
+        shadowColourIdWhenEditingColourId = 0x1000289, /**< Colour for drawing an inner shadow around the edge of the editor when the label is being edited. */
     };
 
     //==============================================================================
