@@ -105,6 +105,12 @@ public:
                                 processors);
     }
 
+    /** Call the given function on each processor */
+    template <typename Fn>
+    void forEach(Fn &&fn) {
+      detail::forEachInTuple([&](auto &proc, auto) { fn(proc); }, processors);
+    }
+
 private:
     template <typename Context, typename Proc, size_t Ix>
     void processOne (const Context& context, Proc& proc, std::integral_constant<size_t, Ix>) noexcept
