@@ -57,16 +57,26 @@ public:
     /** Returns a vector that lies along the Z axis. */
     static Vector3D zAxis() noexcept                        { return { 0, 0, (Type) 1 }; }
 
-    Vector3D& operator+= (Vector3D other) noexcept          { x += other.x;  y += other.y;  z += other.z;  return *this; }
-    Vector3D& operator-= (Vector3D other) noexcept          { x -= other.x;  y -= other.y;  z -= other.z;  return *this; }
+    Vector3D& operator+= (Type value) noexcept              { x += value;  y += value;  z += value;  return *this; }
+    Vector3D& operator-= (Type value) noexcept              { x -= value;  y -= value;  z -= value;  return *this; }
     Vector3D& operator*= (Type scaleFactor) noexcept        { x *= scaleFactor;  y *= scaleFactor;  z *= scaleFactor;  return *this; }
     Vector3D& operator/= (Type scaleFactor) noexcept        { x /= scaleFactor;  y /= scaleFactor;  z /= scaleFactor;  return *this; }
+    Vector3D& operator+= (Vector3D other) noexcept          { x += other.x;  y += other.y;  z += other.z;  return *this; }
+    Vector3D& operator-= (Vector3D other) noexcept          { x -= other.x;  y -= other.y;  z -= other.z;  return *this; }
+    Vector3D& operator/= (Vector3D other) noexcept          { x /= other.x;  y /= other.y;  z /= other.z;  return *this; }
 
-    Vector3D operator+ (Vector3D other) const noexcept      { return { x + other.x, y + other.y, z + other.z }; }
-    Vector3D operator- (Vector3D other) const noexcept      { return { x - other.x, y - other.y, z - other.z }; }
+    Vector3D operator+ (Type value) const noexcept          { return { x + value, y + value, z + value }; }
+    Vector3D operator- (Type value) const noexcept          { return { x - value, y - value, z - value }; }
     Vector3D operator* (Type scaleFactor) const noexcept    { return { x * scaleFactor, y * scaleFactor, z * scaleFactor }; }
     Vector3D operator/ (Type scaleFactor) const noexcept    { return { x / scaleFactor, y / scaleFactor, z / scaleFactor }; }
+    Vector3D operator+ (Vector3D other) const noexcept      { return { x + other.x, y + other.y, z + other.z }; }
+    Vector3D operator- (Vector3D other) const noexcept      { return { x - other.x, y - other.y, z - other.z }; }
+	Vector3D operator/ (Vector3D other) const noexcept      { return { x / other.x, y / other.y, z / other.z }; }
     Vector3D operator-() const noexcept                     { return { -x, -y, -z }; }
+
+
+    Vector3D multiplied (Vector3D other) const noexcept     { return { x * other.x, y * other.y, z * other.z }; }
+    void multiply(Vector3D other) const noexcept            { x *= other.x; y *= other.y; z *= other.z; }
 
     /** Returns the dot-product of these two vectors. */
     Type operator* (Vector3D other) const noexcept          { return x * other.x + y * other.y + z * other.z; }
