@@ -235,14 +235,14 @@ void MidiMessageSequence::sort() noexcept
                       [] (const MidiEventHolder* a, const MidiEventHolder* b) { return a->message.getTimeStamp() < b->message.getTimeStamp(); });
 }
 
-void MidiMessageSequence::updateMatchedPairs() noexcept
+void MidiMessageSequence::updateMatchedPairs(bool regardNoteOnEventsWithVel0AsNoteOff) noexcept
 {
     for (int i = 0; i < list.size(); ++i)
     {
         auto* meh = list.getUnchecked (i);
         auto& m1 = meh->message;
 
-        if (m1.isNoteOn())
+        if (m1.isNoteOn(!regardNoteOnEventsWithVel0AsNoteOff))
         {
             meh->noteOffObject = nullptr;
             auto note = m1.getNoteNumber();
@@ -256,13 +256,13 @@ void MidiMessageSequence::updateMatchedPairs() noexcept
 
                 if (m.getNoteNumber() == note && m.getChannel() == chan)
                 {
-                    if (m.isNoteOff())
+                    if (m.isNoteOff(regardNoteOnEventsWithVel0AsNoteOff))
                     {
                         meh->noteOffObject = meh2;
                         break;
                     }
 
-                    if (m.isNoteOn())
+                    if (m.isNoteOn(!regardNoteOnEventsWithVel0AsNoteOff))
                     {
                         auto newEvent = new MidiEventHolder (MidiMessage::noteOff (chan, note));
                         list.insert (j, newEvent);

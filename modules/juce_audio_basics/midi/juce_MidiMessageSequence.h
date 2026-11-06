@@ -230,8 +230,11 @@ public:
         Call this after re-ordering messages or deleting/adding messages, and it
         will scan the list and make sure all the note-offs in the MidiEventHolder
         structures are pointing at the correct ones.
+
+        @param regardNoteOnEventWithVel0AsNoteOff   if true, note-on events with velocity 0
+                                                    will be regarded as note-off
     */
-    void updateMatchedPairs() noexcept;
+    void updateMatchedPairs(bool regardNoteOnEventsWithVel0AsNoteOff = true) noexcept;
 
     /** Forces a sort of the sequence.
         You may need to call this if you've manually modified the timestamps of some
