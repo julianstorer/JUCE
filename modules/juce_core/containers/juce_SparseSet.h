@@ -277,4 +277,69 @@ private:
     }
 };
 
+//==============================================================================
+/** Iterator for a SparseSet.
+ You shouldn't ever need to use this class directly - it's used internally by begin()
+ and end() to allow range-based-for loops on a SparseSet.
+ */
+template <class Type>
+struct SparseSetIterator
+{
+    SparseSetIterator (const SparseSet<Type>& s, bool isEnd)
+        : set (s)
+    {
+        if (isEnd)
+            rangeIndex = set.getRanges().size();
+    }
+
+    SparseSetIterator& operator++()
+    {
+        valueIndex++;
+        if (valueIndex == set.getRanges()[rangeIndex].getLength())
+        {
+            rangeIndex++;
+            valueIndex = 0;
+        }
+        return *this;
+    }
+
+    bool operator== (const SparseSetIterator<Type>& other) const
+    {
+        return rangeIndex == other.rangeIndex && valueIndex == other.valueIndex;
+    }
+
+    bool operator!= (const SparseSetIterator<Type>& other) const
+    {
+        return ! (*this == other);
+    }
+
+    Type operator*() const
+    {
+        return set.getRanges()[rangeIndex].getStart() + valueIndex;
+    }
+
+    using difference_type    = std::ptrdiff_t;
+    using value_type         = Type;
+    using reference          = Type&;
+    using pointer            = Type*;
+    using iterator_category  = std::forward_iterator_tag;
+
+private:
+    const SparseSet<Type>& set;
+    int rangeIndex = 0;
+    int valueIndex = 0;
+};
+
+template <class Type>
+SparseSetIterator<Type> begin (const SparseSet<Type>& ss)
+{
+    return SparseSetIterator<Type> (ss, false);
+}
+
+template <class Type>
+SparseSetIterator<Type> end (const SparseSet<Type>& ss)
+{
+    return SparseSetIterator<Type> (ss, true);
+}
+
 } // namespace juce
