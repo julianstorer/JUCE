@@ -256,7 +256,7 @@ public:
         return children.indexOf (child.object);
     }
 
-    void addChild (SharedObject* child, int index, UndoManager* undoManager)
+    ValueTree& addChild (SharedObject* child, int index, UndoManager* undoManager)
     {
         if (child != nullptr && child->parent != this)
         {
@@ -295,9 +295,11 @@ public:
                 jassertfalse;
             }
         }
+
+        return *this;
     }
 
-    void removeChild (int childIndex, UndoManager* undoManager)
+    ValueTree& removeChild (int childIndex, UndoManager* undoManager)
     {
         if (auto child = Ptr (children.getObjectPointer (childIndex)))
         {
@@ -313,6 +315,8 @@ public:
                 undoManager->perform (new AddOrRemoveChildAction (*this, childIndex, {}));
             }
         }
+
+        return *this;
     }
 
     void removeAllChildren (UndoManager* undoManager)

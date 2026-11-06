@@ -332,14 +332,16 @@ public:
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
         @see appendChild, removeChild
+        @returns a reference to the value tree, so that you can daisy-chain calls to this method.
     */
-    void addChild (const ValueTree& child, int index, UndoManager* undoManager);
+    ValueTree& addChild (const ValueTree& child, int index, UndoManager* undoManager);
 
     /** Appends a new child sub-tree to this tree.
         This is equivalent to calling addChild() with an index of -1. See addChild() for more details.
         @see addChild, removeChild
+        @returns a reference to the value tree, so that you can daisy-chain calls to this method.
     */
-    void appendChild (const ValueTree& child, UndoManager* undoManager);
+    ValueTree& appendChild (const ValueTree& child, UndoManager* undoManager);
 
     /** Removes the specified child from this tree's child-list.
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
