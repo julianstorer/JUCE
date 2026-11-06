@@ -192,13 +192,13 @@ public:
         any that are not present in the source tree will be removed.
         @see copyPropertiesAndChildrenFrom
     */
-    void copyPropertiesFrom (const ValueTree& source, UndoManager* undoManager);
+    void copyPropertiesFrom (const ValueTree& source, UndoManager* undoManager = nullptr);
 
     /** Replaces all children and properties of this object with copies of those from
         the source object.
         @see copyPropertiesFrom
     */
-    void copyPropertiesAndChildrenFrom (const ValueTree& source, UndoManager* undoManager);
+    void copyPropertiesAndChildrenFrom (const ValueTree& source, UndoManager* undoManager = nullptr);
 
     //==============================================================================
     /** Returns the type of this tree.
@@ -248,7 +248,7 @@ public:
         @see var, getProperty, removeProperty
         @returns a reference to the value tree, so that you can daisy-chain calls to this method.
     */
-    ValueTree& setProperty (const Identifier& name, const var& newValue, UndoManager* undoManager);
+    ValueTree& setProperty (const Identifier& name, const var& newValue, UndoManager* undoManager = nullptr);
 
     /** Returns true if the tree contains a named property. */
     bool hasProperty (const Identifier& name) const noexcept;
@@ -257,13 +257,13 @@ public:
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
     */
-    void removeProperty (const Identifier& name, UndoManager* undoManager);
+    void removeProperty (const Identifier& name, UndoManager* undoManager = nullptr);
 
     /** Removes all properties from the tree.
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
     */
-    void removeAllProperties (UndoManager* undoManager);
+    void removeAllProperties (UndoManager* undoManager = nullptr);
 
     /** Returns the total number of properties that the tree contains.
         @see getProperty.
@@ -286,7 +286,7 @@ public:
         If shouldUpdateSynchronously is true the Value::Listener will be updated synchronously.
         @see ValueSource::sendChangeMessage (bool)
     */
-    Value getPropertyAsValue (const Identifier& name, UndoManager* undoManager,
+    Value getPropertyAsValue (const Identifier& name, UndoManager* undoManager = nullptr,
                               bool shouldUpdateSynchronously = false);
 
     //==============================================================================
@@ -314,7 +314,7 @@ public:
         the method on is itself invalid.
         @see getChildWithName
     */
-    ValueTree getOrCreateChildWithName (const Identifier& type, UndoManager* undoManager);
+    ValueTree getOrCreateChildWithName (const Identifier& type, UndoManager* undoManager = nullptr);
 
     /** Looks for the first sub-tree that has the specified property value.
         This will scan the child trees in order, until it finds one that has property that matches
@@ -333,32 +333,32 @@ public:
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
         @see appendChild, removeChild
     */
-    void addChild (const ValueTree& child, int index, UndoManager* undoManager);
+    void addChild (const ValueTree& child, int index, UndoManager* undoManager = nullptr);
 
     /** Appends a new child sub-tree to this tree.
         This is equivalent to calling addChild() with an index of -1. See addChild() for more details.
         @see addChild, removeChild
     */
-    void appendChild (const ValueTree& child, UndoManager* undoManager);
+    void appendChild (const ValueTree& child, UndoManager* undoManager = nullptr);
 
     /** Removes the specified child from this tree's child-list.
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
     */
-    void removeChild (const ValueTree& child, UndoManager* undoManager);
+    void removeChild (const ValueTree& child, UndoManager* undoManager = nullptr);
 
     /** Removes a sub-tree from this tree.
         If the index is out-of-range, nothing will be changed.
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
     */
-    void removeChild (int childIndex, UndoManager* undoManager);
+    void removeChild (int childIndex, UndoManager* undoManager = nullptr);
 
     /** Removes all child-trees.
         If the undoManager parameter is not nullptr, its UndoManager::perform() method will be used,
         so that this change can be undone. Be very careful not to mix undoable and non-undoable changes!
     */
-    void removeAllChildren (UndoManager* undoManager);
+    void removeAllChildren (UndoManager* undoManager = nullptr);
 
     /** Moves one of the sub-trees to a different index.
         This will move the child to a specified index, shuffling along any intervening
@@ -372,7 +372,7 @@ public:
                                 of the list
         @param undoManager      the optional UndoManager to use to store this transaction
     */
-    void moveChild (int currentIndex, int newIndex, UndoManager* undoManager);
+    void moveChild (int currentIndex, int newIndex, UndoManager* undoManager = nullptr);
 
     /** Returns true if this tree is a sub-tree (at any depth) of the given parent.
         This searches recursively, so returns true if it's a sub-tree at any level below the parent.
@@ -573,7 +573,7 @@ public:
     */
     ValueTree& setPropertyExcludingListener (Listener* listenerToExclude,
                                              const Identifier& name, const var& newValue,
-                                             UndoManager* undoManager);
+                                             UndoManager* undoManager = nullptr);
 
     /** Causes a property-change callback to be triggered for the specified property,
         calling any listeners that are registered.
@@ -603,7 +603,7 @@ public:
                             faster algorithm is used, but equivalent elements may be rearranged.
     */
     template <typename ElementComparator>
-    void sort (ElementComparator& comparator, UndoManager* undoManager, bool retainOrderOfEquivalentItems)
+    void sort (ElementComparator& comparator, UndoManager* undoManager = nullptr, bool retainOrderOfEquivalentItems = true)
     {
         if (object != nullptr)
         {
