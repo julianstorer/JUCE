@@ -524,7 +524,7 @@ void DragAndDropContainer::startDragging (const var& sourceDescription,
     dragImageComponent->sourceDetails.localPosition = sourceComponent->getLocalPoint (nullptr, lastMouseDown);
     dragImageComponent->updateLocation (false, lastMouseDown);
 
-   #if JUCE_WINDOWS
+   #if JUCE_WINDOWS || JUCE_LINUX
     // Under heavy load, the layered window's paint callback can often be lost by the OS,
     // so forcing a repaint at least once makes sure that the window becomes visible.
     if (auto* peer = dragImageComponent->getPeer())
