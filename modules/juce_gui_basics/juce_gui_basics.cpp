@@ -183,6 +183,7 @@
  #else
   #include "native/accessibility/juce_Accessibility_mac.mm"
   #include "native/juce_PerScreenDisplayLinks_mac.h"
+  #include "native/juce_UPDDMultitouch_mac.mm"
   #include "native/juce_NSViewComponentPeer_mac.mm"
   #include "native/juce_WindowUtils_mac.mm"
   #include "native/juce_Windowing_mac.mm"
