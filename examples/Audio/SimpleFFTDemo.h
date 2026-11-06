@@ -190,7 +190,7 @@ private:
     float fifo [fftSize];
     float fftData [2 * fftSize];
     int fifoIndex = 0;
-    bool nextFFTBlockReady = false;
+    std::atomic<bool> nextFFTBlockReady = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleFFTDemo)
 };
