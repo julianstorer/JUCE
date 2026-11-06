@@ -161,6 +161,22 @@ namespace
                 modules.tryToFixMissingDependencies (m);
         }
 
+        void clearMainGroup()
+        {
+            auto mainGroup = project->getMainGroup();
+            auto mainGrouID = mainGroup.getID();
+
+            mainGroup.removeItemFromProject();
+            Project::Item cleanMainGroup (*project, ValueTree ("MAINGROUP"), false);
+            cleanMainGroup.setID(mainGrouID);
+            project->getProjectRoot().addChild (cleanMainGroup.state, 0, nullptr);
+        }
+
+        void addFile (const File& file)
+        {
+            project->getMainGroup().addFileRetainingSortOrder (file, true);
+        }
+
         std::unique_ptr<Project> project;
     };
 
@@ -178,6 +194,39 @@ namespace
                   << proj.project->getFile().getFullPathName() << std::endl;
 
         proj.save (justSaveResources, args.containsOption ("--fix-missing-dependencies"));
+    }
+
+    static void clearMainGroup (const ArgumentList& args)
+    {
+        args.checkMinNumArguments (2);
+        LoadedProject proj (args[1]);
+
+        std::cout << "Clearing MAINGROUP: "
+                  << std::endl;
+
+        proj.clearMainGroup ();
+
+        std::cout << "Re-saving file: "
+                  << proj.project->getFile().getFullPathName() << std::endl;
+
+        proj.save (false, args.containsOption ("--fix-missing-dependencies"));
+    }
+
+    static void addFile (const ArgumentList& args)
+    {
+        args.checkMinNumArguments (3);
+        LoadedProject proj (args[1]);
+        auto fileToAdd = args[2].resolveAsExistingFile();
+
+        std::cout << "Adding File: "
+                  << fileToAdd.getFileName() << std::endl;
+
+        proj.addFile (fileToAdd.getFullPathName());
+
+        std::cout << "Re-saving file: "
+                  << proj.project->getFile().getFullPathName() << std::endl;
+
+        proj.save (false, args.containsOption ("--fix-missing-dependencies"));
     }
 
     //==============================================================================
@@ -839,6 +888,12 @@ namespace
                   << " " << appName << " --resave-resources project_file" << std::endl
                   << "    Resaves just the binary resources for a project." << std::endl
                   << std::endl
+                  << " " << appName << " --clear-maingroup project_file" << std::endl
+                  << "    Removes all resource file references from a project." << std::endl
+                  << std::endl
+                  << " " << appName << " --add-file project_file path_to_file_to_add" << std::endl
+                  << "    Adds an existing file or directory to a project." << std::endl
+                  << std::endl
                   << " " << appName << " --get-version project_file" << std::endl
                   << "    Returns the version number of a project." << std::endl
                   << std::endl
@@ -915,6 +970,8 @@ int performCommandLine (const ArgumentList& args)
         if (matchCommand ("help"))                     { showHelp();                            return 0; }
         if (matchCommand ("h"))                        { showHelp();                            return 0; }
         if (matchCommand ("resave"))                   { resaveProject (args, false);           return 0; }
+        if (matchCommand ("clear-maingroup"))          { clearMainGroup (args);                 return 0; }
+        if (matchCommand ("add-file"))                 { addFile (args);                        return 0; }
         if (matchCommand ("resave-resources"))         { resaveProject (args, true);            return 0; }
         if (matchCommand ("get-version"))              { getVersion (args);                     return 0; }
         if (matchCommand ("set-version"))              { setVersion (args);                     return 0; }
