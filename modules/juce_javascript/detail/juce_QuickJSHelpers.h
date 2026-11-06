@@ -250,9 +250,22 @@ static var tryQuickJSToJuce (const qjs::QuickJSContext::ValuePtr& ptr,
 
     if (JS_IsNumber (ptr.value))
     {
-        double d = 0;
-        JS_ToFloat64 (ptr.context, std::addressof (d), ptr.value);
-        return d;
+        if(JS_IsBigInt(ptr.value))
+        {
+            int64_t i = 0;
+            JS_ToBigInt64 (ptr.context, std::addressof (i), ptr.value);
+            return var((juce::int64)i);
+        }if(JS_IsInteger(ptr.value))
+        {
+            int32_t i = 0;
+            JS_ToInt32 (ptr.context, std::addressof (i), ptr.value);
+            return i;
+        }
+        {
+            double d = 0;
+            JS_ToFloat64 (ptr.context, std::addressof (d), ptr.value);
+            return d;
+        }
     }
 
     if (JS_IsBool (ptr.value))

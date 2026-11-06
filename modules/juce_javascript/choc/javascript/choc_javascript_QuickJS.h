@@ -8912,7 +8912,13 @@ static inline JS_BOOL JS_IsNumber(JSValueConst v)
     return tag == JS_TAG_INT || JS_TAG_IS_FLOAT64(tag);
 }
 
-static inline JS_BOOL JS_IsBigInt(JSContext *ctx, JSValueConst v)
+static inline JS_BOOL JS_IsInteger(JSValueConst v)
+{
+    int tag = JS_VALUE_GET_TAG(v);
+    return tag == JS_TAG_INT;
+}
+
+static inline JS_BOOL JS_IsBigInt(JSValueConst v)
 {
     int tag = JS_VALUE_GET_TAG(v);
     return tag == JS_TAG_BIG_INT;
@@ -20781,7 +20787,7 @@ inline int JS_ToInt64(JSContext *ctx, int64_t *pres, JSValueConst val)
 
 inline int JS_ToInt64Ext(JSContext *ctx, int64_t *pres, JSValueConst val)
 {
-    if (JS_IsBigInt(ctx, val))
+    if (JS_IsBigInt(val))
         return JS_ToBigInt64(ctx, pres, val);
     else
         return JS_ToInt64(ctx, pres, val);
