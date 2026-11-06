@@ -1227,6 +1227,24 @@ public:
         return kResultOk;
     }
 
+    
+    //==============================================================================
+    tresult PLUGIN_API setComponentHandler (Steinberg::Vst::IComponentHandler* newHandler) override
+    {
+        auto result = Vst::EditController::setComponentHandler (newHandler); 
+        // The following is needed because Studio One calls this method after our installAudioProcessor method,
+        // so installAudioProcessor is not able to set a non-null IComponentHandler on VST3ClientExtensions.
+        // Other DAWs call this method before our installAudioProcessor (when audioProcessor is still nullptr).        
+        if(audioProcessor != nullptr)
+        {
+            if (auto* extensions = audioProcessor->get()->getVST3ClientExtensions())
+            {
+                extensions->setIComponentHandler (componentHandler);
+            }            
+        }
+        return result;
+    }
+
     void setAudioProcessor (JuceAudioProcessor* audioProc)
     {
         if (audioProcessor.get() != audioProc)
@@ -1714,7 +1732,10 @@ private:
 
         if (auto* extensions = audioProcessor->get()->getVST3ClientExtensions())
         {
-            extensions->setIComponentHandler (componentHandler);
+            if (componentHandler != nullptr)
+            {
+                extensions->setIComponentHandler (componentHandler);
+            }
             extensions->setIHostApplication (hostContext.get());
         }
 
