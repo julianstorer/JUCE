@@ -39,7 +39,7 @@ struct FFT::Instance
 {
     virtual ~Instance() = default;
     virtual void perform (const Complex<float>* input, Complex<float>* output, bool inverse) const noexcept = 0;
-    virtual void performRealOnlyForwardTransform (float*, bool) const noexcept = 0;
+    virtual void performRealOnlyForwardTransform (float*) const noexcept = 0;
     virtual void performRealOnlyInverseTransform (float*) const noexcept = 0;
 };
 
@@ -133,23 +133,30 @@ struct FFTFallback final : public FFT::Instance
 
     const size_t maxFFTScratchSpaceToAlloca = 256 * 1024;
 
-    void performRealOnlyForwardTransform (float* d, bool) const noexcept override
+    void performRealOnlyForwardTransform (float* d) const noexcept override
     {
         if (size == 1)
             return;
 
         const size_t scratchSize = 16 + (size_t) size * sizeof (Complex<float>);
 
-        if (scratchSize < maxFFTScratchSpaceToAlloca)
+        if (scratchSize * 2 < maxFFTScratchSpaceToAlloca)
         {
             JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6255)
-            performRealOnlyForwardTransform (static_cast<Complex<float>*> (alloca (scratchSize)), d);
+            performRealOnlyForwardTransform (
+                static_cast<Complex<float>*> (alloca (scratchSize)),
+                static_cast<Complex<float>*> (alloca (scratchSize)),
+                d);
             JUCE_END_IGNORE_WARNINGS_MSVC
         }
         else
         {
-            HeapBlock<char> heapSpace (scratchSize);
-            performRealOnlyForwardTransform (unalignedPointerCast<Complex<float>*> (heapSpace.getData()), d);
+            HeapBlock<char> heapSpaceA (scratchSize);
+            HeapBlock<char> heapSpaceB (scratchSize);
+            performRealOnlyForwardTransform (
+                unalignedPointerCast<Complex<float>*> (heapSpaceA.getData()),
+                unalignedPointerCast<Complex<float>*> (heapSpaceB.getData()),
+                d);
         }
     }
 
@@ -163,38 +170,45 @@ struct FFTFallback final : public FFT::Instance
         if (scratchSize < maxFFTScratchSpaceToAlloca)
         {
             JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6255)
-            performRealOnlyInverseTransform (static_cast<Complex<float>*> (alloca (scratchSize)), d);
+            performRealOnlyInverseTransform (
+                static_cast<Complex<float>*> (alloca (scratchSize)),
+                static_cast<Complex<float>*> (alloca (scratchSize)),
+                d);
             JUCE_END_IGNORE_WARNINGS_MSVC
         }
         else
         {
-            HeapBlock<char> heapSpace (scratchSize);
-            performRealOnlyInverseTransform (unalignedPointerCast<Complex<float>*> (heapSpace.getData()), d);
+            HeapBlock<char> heapSpaceA (scratchSize);
+            HeapBlock<char> heapSpaceB (scratchSize);
+            performRealOnlyInverseTransform (
+                unalignedPointerCast<Complex<float>*> (heapSpaceA.getData()),
+                unalignedPointerCast<Complex<float>*> (heapSpaceB.getData()),
+                d);
         }
     }
 
-    void performRealOnlyForwardTransform (Complex<float>* scratch, float* d) const noexcept
+    void performRealOnlyForwardTransform (Complex<float>* scratchA, Complex<float>* scratchB, float* d) const noexcept
     {
         for (int i = 0; i < size; ++i)
-            scratch[i] = { d[i], 0 };
+            scratchA[i] = { d[i], 0 };
 
-        perform (scratch, reinterpret_cast<Complex<float>*> (d), false);
+        perform (scratchA, scratchB, false);
+        memcpy (d, scratchB, sizeof(Complex<float>) * ((size_t) size / 2 + 1));
     }
 
-    void performRealOnlyInverseTransform (Complex<float>* scratch, float* d) const noexcept
+    void performRealOnlyInverseTransform (Complex<float>* scratchA, Complex<float>* scratchB, float* d) const noexcept
     {
         auto* input = reinterpret_cast<Complex<float>*> (d);
 
+        for (int i = 0; i < size >> 1; ++i)
+            scratchB[i] = input[i];
         for (int i = size >> 1; i < size; ++i)
-            input[i] = std::conj (input[size - i]);
+            scratchB[i] = std::conj (input[size - i]);
 
-        perform (input, scratch, true);
+        perform (scratchB, scratchA, true);
 
         for (int i = 0; i < size; ++i)
-        {
-            d[i] = scratch[i].real();
-            d[i + size] = scratch[i].imag();
-        }
+            d[i] = scratchA[i].real();
     }
 
     //==============================================================================
@@ -480,7 +494,7 @@ struct AppleFFT final : public FFT::Instance
         vDSP_vsmul ((float*) output, 1, &factor, (float*) output, 1, static_cast<size_t> (size << 1));
     }
 
-    void performRealOnlyForwardTransform (float* inoutData, bool ignoreNegativeFreqs) const noexcept override
+    void performRealOnlyForwardTransform (float* inoutData) const noexcept override
     {
         auto size = (1 << order);
         auto* inout = reinterpret_cast<Complex<float>*> (inoutData);
@@ -490,7 +504,12 @@ struct AppleFFT final : public FFT::Instance
         vDSP_fft_zrip (fftSetup, &splitInOut, 2, order, kFFTDirection_Forward);
         vDSP_vsmul (inoutData, 1, &forwardNormalisation, inoutData, 1, static_cast<size_t> (size << 1));
 
-        mirrorResult (inout, ignoreNegativeFreqs);
+        // Imaginary part of nyquist and DC frequencies are always zero
+        // so Apple uses the imaginary part of the DC frequency to store
+        // the real part of the nyquist frequency
+        auto* out = reinterpret_cast<Complex<float>*> (inoutData);
+        out[size >> 1] = { out[0].imag(), 0.0 };
+        out[0]         = { out[0].real(), 0.0 };
     }
 
     void performRealOnlyInverseTransform (float* inoutData) const noexcept override
@@ -512,22 +531,6 @@ struct AppleFFT final : public FFT::Instance
 
 private:
     //==============================================================================
-    void mirrorResult (Complex<float>* out, bool ignoreNegativeFreqs) const noexcept
-    {
-        auto size = (1 << order);
-        auto i = size >> 1;
-
-        // Imaginary part of nyquist and DC frequencies are always zero
-        // so Apple uses the imaginary part of the DC frequency to store
-        // the real part of the nyquist frequency
-        out[i++] = { out[0].imag(), 0.0 };
-        out[0]   = { out[0].real(), 0.0 };
-
-        if (! ignoreNegativeFreqs)
-            for (; i < size; ++i)
-                out[i] = std::conj (out[size - i]);
-    }
-
     static DSPSplitComplex toSplitComplex (Complex<float>* data) noexcept
     {
         // this assumes that Complex interleaves real and imaginary parts
@@ -693,7 +696,7 @@ struct FFTWImpl  : public FFT::Instance
         }
     }
 
-    void performRealOnlyForwardTransform (float* inputOutputData, bool ignoreNegativeFreqs) const noexcept override
+    void performRealOnlyForwardTransform (float* inputOutputData) const noexcept override
     {
         if (order == 0)
             return;
@@ -701,12 +704,6 @@ struct FFTWImpl  : public FFT::Instance
         auto* out = reinterpret_cast<Complex<float>*> (inputOutputData);
 
         fftw.execute_r2c_fftw (r2c, inputOutputData, out);
-
-        auto size = (1 << order);
-
-        if (! ignoreNegativeFreqs)
-            for (int i = size >> 1; i < size; ++i)
-                out[i] = std::conj (out[size - i]);
     }
 
     void performRealOnlyInverseTransform (float* inputOutputData) const noexcept override
@@ -793,19 +790,12 @@ struct IntelFFT final : public FFT::Instance
             DftiComputeForward (c2c, (void*) input, output);
     }
 
-    void performRealOnlyForwardTransform (float* inputOutputData, bool ignoreNegativeFreqs) const noexcept override
+    void performRealOnlyForwardTransform (float* inputOutputData) const noexcept override
     {
         if (order == 0)
             return;
 
         DftiComputeForward (c2r, inputOutputData);
-
-        auto* out = reinterpret_cast<Complex<float>*> (inputOutputData);
-        auto size = (1 << order);
-
-        if (! ignoreNegativeFreqs)
-            for (int i = size >> 1; i < size; ++i)
-                out[i] = std::conj (out[size - i]);
     }
 
     void performRealOnlyInverseTransform (float* inputOutputData) const noexcept override
@@ -860,19 +850,9 @@ public:
         }
     }
 
-    void performRealOnlyForwardTransform (float* inoutData, bool ignoreNegativeFreqs) const noexcept override
+    void performRealOnlyForwardTransform (float* inoutData) const noexcept override
     {
         ippsFFTFwd_RToCCS_32f_I (inoutData, real.specPtr, real.workBuf.get());
-
-        if (order == 0)
-            return;
-
-        auto* out = reinterpret_cast<Complex<float>*> (inoutData);
-        const auto size = (1 << order);
-
-        if (! ignoreNegativeFreqs)
-            for (auto i = size >> 1; i < size; ++i)
-                out[i] = std::conj (out[size - i]);
     }
 
     void performRealOnlyInverseTransform (float* inoutData) const noexcept override
@@ -979,7 +959,19 @@ void FFT::perform (const Complex<float>* input, Complex<float>* output, bool inv
 void FFT::performRealOnlyForwardTransform (float* inputOutputData, bool ignoreNegativeFreqs) const noexcept
 {
     if (engine != nullptr)
-        engine->performRealOnlyForwardTransform (inputOutputData, ignoreNegativeFreqs);
+        engine->performRealOnlyForwardTransform (inputOutputData);
+
+    if (! ignoreNegativeFreqs && size != 1)
+    {
+        // Preserve compatibility with legacy implementation
+        // where the redundant negative frequencies were also generated.
+
+        auto* out = reinterpret_cast<Complex<float>*> (inputOutputData);
+
+        if (! ignoreNegativeFreqs)
+            for (auto i = size >> 1; i < size; ++i)
+                out[i] = std::conj (out[size - i]);
+    }
 }
 
 void FFT::performRealOnlyInverseTransform (float* inputOutputData) const noexcept

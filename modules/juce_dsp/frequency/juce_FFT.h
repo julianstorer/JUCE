@@ -76,19 +76,17 @@ public:
 
         As the coefficients of the negative frequencies (frequencies higher than
         N/2 or pi) are the complex conjugate of their positive counterparts,
-        it may not be necessary to calculate them for your particular application.
+        it is usually unnecessary to calculate them.
         You can use onlyCalculateNonNegativeFrequencies to let the FFT
-        engine know that you do not plan on using them. Note that this is only a
-        hint: some FFT engines (currently only the Fallback engine), will still
-        calculate the negative frequencies even if onlyCalculateNonNegativeFrequencies
-        is true.
+        engine know that you do not plan on using them.
 
-        The size of the array passed in must be 2 * getSize(), and the first half
-        should contain your raw input sample data. On return, if
-        onlyCalculateNonNegativeFrequencies is false, the array will contain size
-        complex real + imaginary parts data interleaved. If
-        onlyCalculateNonNegativeFrequencies is true, the array will contain at least
-        (size / 2) + 1 complex numbers. Both outputs can be passed to
+        The array size must be large enough for the outputs,
+        which are of size (2 * getSize()) by default or (2 + getSize()) if enabling onlyCalculateNonNegativeFrequencies.
+        The first getSize() elements should contain your raw input sample data.
+
+        On return, if the array will contain complex real + imaginary parts data interleaved.
+        If onlyCalculateNonNegativeFrequencies is true, the array will contain
+        (size / 2) + 1 complex numbers. The outputs can be passed to
         performRealOnlyInverseTransform() in order to convert it back to reals.
     */
     void performRealOnlyForwardTransform (float* inputOutputData,
@@ -96,10 +94,9 @@ public:
 
     /** Performs a reverse operation to data created in performRealOnlyForwardTransform().
 
-        Although performRealOnlyInverseTransform will only use the first ((size / 2) + 1)
-        complex numbers, the size of the array passed in must still be 2 * getSize(), as some
-        FFT engines require the extra space for the calculation. On return, the first half of the
-        array will contain the reconstituted samples.
+        The size of the array passed in must still be getSize() + 2,
+        which contains the ((size / 2) + 1) complex numbers representing the non-negative frequencies of the DFT.
+        On return, the first getSize() elements of the array will contain the reconstituted samples.
     */
     void performRealOnlyInverseTransform (float* inputOutputData) const noexcept;
 
