@@ -253,16 +253,16 @@ private:
             auto value3 = samples[index3];
             auto value4 = samples[index4];
 
+            auto d0 = delayFrac;
             auto d1 = delayFrac - 1.f;
             auto d2 = delayFrac - 2.f;
             auto d3 = delayFrac - 3.f;
 
-            auto c1 = -d1 * d2 * d3 / 6.f;
-            auto c2 = d2 * d3 * 0.5f;
-            auto c3 = -d1 * d3 * 0.5f;
-            auto c4 = d1 * d2 / 6.f;
+            auto a = d1 * d2 / 6.f;
+            auto b = d3 * d0 * 0.5f;
 
-            return value1 * c1 + delayFrac * (value2 * c2 + value3 * c3 + value4 * c4);
+            return a * (d0 * value4 - d3 * value1)
+                 + b * (d2 * value2 - d1 * value3);
         }
         else if constexpr (std::is_same_v<InterpolationType, DelayLineInterpolationTypes::Thiran>)
         {
