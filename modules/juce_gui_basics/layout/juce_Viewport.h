@@ -64,7 +64,7 @@ public:
     explicit Viewport (const String& componentName = String());
 
     /** Destructor. */
-    ~Viewport() override;
+    virtual ~Viewport() override;
 
     //==============================================================================
     /** Sets the component that this viewport will contain and scroll around.
@@ -321,21 +321,21 @@ public:
 
     //==============================================================================
     /** @internal */
-    void resized() override;
+    virtual void resized() override;
     /** @internal */
-    void scrollBarMoved (ScrollBar*, double newRangeStart) override;
+    virtual void scrollBarMoved(ScrollBar*, double newRangeStart) override;
     /** @internal */
-    void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override;
+    virtual void mouseWheelMove(const MouseEvent&, const MouseWheelDetails&) override;
     /** @internal */
-    void mouseDown (const MouseEvent& e) override;
+    virtual void mouseDown(const MouseEvent& e) override;
     /** @internal */
-    bool keyPressed (const KeyPress&) override;
+    virtual bool keyPressed(const KeyPress&) override;
     /** @internal */
-    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
+    virtual void componentMovedOrResized(Component&, bool wasMoved, bool wasResized) override;
     /** @internal */
-    void lookAndFeelChanged() override;
+    virtual void lookAndFeelChanged() override;
     /** @internal */
-    bool useMouseWheelMoveIfNeeded (const MouseEvent&, const MouseWheelDetails&);
+    virtual bool useMouseWheelMoveIfNeeded (const MouseEvent&, const MouseWheelDetails&);
     /** @internal */
     static bool respondsToKey (const KeyPress&);
 
