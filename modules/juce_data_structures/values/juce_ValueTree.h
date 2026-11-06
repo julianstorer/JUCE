@@ -615,6 +615,20 @@ public:
         }
     }
 
+    using SortLambda=std::function<int(const ValueTree&, const ValueTree&)>;
+
+    /** Sorts the children of this ValueTree using a lambda
+        @param compareFunction a lambda of the form `std::function<int(const ValueTree&, const ValueTree&)>`
+        @param undoManager  optional UndoManager for storing the changes
+        @param retainOrderOfEquivalentItems     if this is true, then items which the comparator says are
+                            equivalent will be kept in the order in which they currently appear in the array.
+                            This is slower to perform, but may be important in some cases. If it's false, a
+                            faster algorithm is used, but equivalent elements may be rearranged.
+     */
+    void sort (SortLambda,
+               UndoManager* undoManager,
+               bool retainOrderOfEquivalentItems);
+
     /** Returns the total number of references to the shared underlying data structure that this
         ValueTree is using.
     */

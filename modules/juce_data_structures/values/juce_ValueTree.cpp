@@ -1120,6 +1120,23 @@ ValueTree ValueTree::readFromGZIPData (const void* data, size_t numBytes)
     return readFromStream (gzipStream);
 }
 
+struct LambdaSorter
+{
+    LambdaSorter (ValueTree::SortLambda s) : sortFunc (s) {}
+    int compareElements (const ValueTree& first, const ValueTree& second)
+    {
+        return sortFunc (first, second);
+    }
+private:
+    ValueTree::SortLambda sortFunc;
+};
+
+void ValueTree::sort (SortLambda comparator, UndoManager* undoManager, bool retainOrderOfEquivalentItems)
+{
+    LambdaSorter sorter (comparator);
+    sort (sorter, undoManager, retainOrderOfEquivalentItems);
+}
+
 void ValueTree::Listener::valueTreePropertyChanged   (ValueTree&, const Identifier&) {}
 void ValueTree::Listener::valueTreeChildAdded        (ValueTree&, ValueTree&)        {}
 void ValueTree::Listener::valueTreeChildRemoved      (ValueTree&, ValueTree&, int)   {}
@@ -1204,6 +1221,11 @@ public:
         }
 
         return v;
+    }
+
+    static bool compareNumber (const ValueTree& left, const ValueTree& right)
+    {
+        return double (right.getProperty ("number")) >= double (left.getProperty ("number"));
     }
 
     void runTest() override
@@ -1322,6 +1344,48 @@ public:
                 expect (numLines > 1);
                 expectEquals (lines[numLines - 1], "<Test number=\"" + test.second + "\"/>");
             }
+        }
+
+        {
+            beginTest ("Sort with lambda (numbers)");
+
+            auto r = getRandom();
+
+            ValueTree testVT ("Test");
+            Identifier number ("number");
+
+            std::vector<double> numbers (100);
+            std::fill (numbers.begin(), numbers.end(), r.nextDouble());
+
+            testVT.sort ([number](const auto& left, const auto& right)
+                         {
+                             return double (right.getProperty (number)) - double (left.getProperty (number));
+                         }, nullptr, false);
+
+            expect (std::is_sorted (testVT.begin(), testVT.end(), &compareNumber));
+        }
+
+        {
+            beginTest ("Sort with lambda (text)");
+
+            ValueTree testVT ("Test");
+            Identifier child ("Child");
+            Identifier text ("text");
+
+            testVT.appendChild ({child, {{text, "Ape"}}}, nullptr);
+            testVT.appendChild ({child, {{text, "Zebra"}}}, nullptr);
+            testVT.appendChild ({child, {{text, "Fish"}}}, nullptr);
+            testVT.appendChild ({child, {{text, "Dog"}}}, nullptr);
+
+            testVT.sort ([text](const auto& left, const auto& right)
+                         {
+                             return left.getProperty (text).toString().compare (right.getProperty (text).toString());;
+                         }, nullptr, false);
+
+            expect (testVT.getChild (0).getProperty (text).toString() == "Ape");
+            expect (testVT.getChild (1).getProperty (text).toString() == "Dog");
+            expect (testVT.getChild (2).getProperty (text).toString() == "Fish");
+            expect (testVT.getChild (3).getProperty (text).toString() == "Zebra");
         }
     }
 };
