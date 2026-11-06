@@ -50,6 +50,26 @@ OSCAddressPattern OSCMessage::getAddressPattern() const noexcept
     return addressPattern;
 }
 
+#if JUCE_IP_AND_PORT_DETECTION 
+String OSCMessage::getSenderIPAddress() const noexcept
+{
+    return senderIPAddress;
+}
+
+void OSCMessage::setSenderIPAddress(const String& ip) noexcept
+{
+    senderIPAddress = ip;
+}
+
+int OSCMessage::getSenderPortNumber() const noexcept
+{
+    return senderPortNumber;
+}
+void OSCMessage::setSenderPortNumber(int port) noexcept
+{
+    senderPortNumber = port;
+}
+#endif 
 //==============================================================================
 int OSCMessage::size() const noexcept
 {

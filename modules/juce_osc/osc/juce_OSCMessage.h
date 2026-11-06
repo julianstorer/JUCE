@@ -91,6 +91,16 @@ public:
     /** Returns the address pattern of the OSCMessage. */
     OSCAddressPattern getAddressPattern() const noexcept;
 
+#if JUCE_IP_AND_PORT_DETECTION 
+    /** Returns the sender's IP Address. */
+    String getSenderIPAddress() const noexcept;
+    void setSenderIPAddress(const String& ip) noexcept;
+
+    /** Returns the sender's port number. */
+    int getSenderPortNumber() const noexcept;
+    void setSenderPortNumber(int port) noexcept;
+#endif 
+
     /** Returns the number of OSCArgument objects that belong to this OSCMessage. */
     int size() const noexcept;
 
@@ -178,6 +188,11 @@ private:
     //==============================================================================
     OSCAddressPattern addressPattern;
     Array<OSCArgument> arguments;
+
+#if JUCE_IP_AND_PORT_DETECTION 
+    String senderIPAddress;
+    int senderPortNumber = 0;
+#endif 
 };
 
 
